@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Generador Dataset ETL Power BI - El Desafío</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body { background:#f4f7fb; font-family:Segoe UI, Tahoma, sans-serif; }
+        
+        /* HERO MEJORADO CON NARRATIVA */
+        .hero {
+            background: linear-gradient(135deg, #0b3d91, #00b4d8);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            margin-top: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::after {
+            content: "\F30C"; /* Icono de base de datos de Bootstrap */
+            font-family: "bootstrap-icons";
+            position: absolute;
+            right: -20px;
+            bottom: -50px;
+            font-size: 15rem;
+            opacity: 0.1;
+        }
+        .narrative-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+
+        .card-custom {
+            border:none;
+            border-radius:18px;
+            box-shadow:0 5px 15px rgba(0,0,0,.08);
+        }
+
+        /* TIMELINE ETL MEJORADA (LA ÚLTIMA PARTE) */
+        .etl-section {
+            background: white;
+            padding: 40px;
+            border-radius: 18px;
+            margin: 40px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,.08);
+        }
+        .timeline-container {
+            border-left: 4px dashed #00b4d8;
+            padding-left: 40px;
+            margin-left: 20px;
+            margin-top: 30px;
+        }
+        .step-card {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            transition: transform 0.2s;
+        }
+        .step-card:hover {
+            transform: translateX(5px);
+            border-color: #0d6efd;
+        }
+        .step-card::before {
+            content: "";
+            position: absolute;
+            left: -49px;
+            top: 30px;
+            width: 20px;
+            height: 20px;
+            background: #0d6efd;
+            border-radius: 50%;
+            border: 4px solid #f4f7fb;
+            box-shadow: 0 0 0 4px #00b4d8;
+        }
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #f1f1f1;
+            padding-bottom: 10px;
+        }
+        .step-number {
+            background: #0d6efd;
+            color: white;
+            font-weight: bold;
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 1.2rem;
+        }
+        .route-box {
+            background: #f8f9fa;
+            border-left: 4px solid #6c757d;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'Consolas', monospace;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .route-en {
+            border-left-color: #0dcaf0;
+            background: #f0fcfc;
+        }
+        .code-snippet {
+            background: #212529;
+            color: #20c997;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- HERO MEJORADO (STORYTELLING) -->
+    <div class="hero">
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-12 text-center mb-3">
+                <h1 class="fw-bold display-5"><i class="bi bi-rocket-takeoff-fill text-warning"></i> Simulador ETL: El Desafío de Datos</h1>
+            </div>
+            <div class="col-md-10 mx-auto">
+                <div class="narrative-box">
+                    <p class="mb-2"><i class="bi bi-person-badge-fill text-warning"></i> <strong>Tu Misión:</strong> Acabas de ser contratado como el Analista de Datos Principal en <em>TechStore RD</em>.</p>
+                    <p class="mb-2">El antiguo sistema de ventas es un desastre: exporta los nombres en mayúsculas/minúsculas aleatorias, sustituye letras por símbolos (como '@' en lugar de 'a' o '3' por 'e') e incluye espacios innecesarios que arruinan los reportes.</p>
+                    <p class="mb-0"><strong>El objetivo:</strong> Genera este dataset simulado, expórtalo en tu formato favorito, conéctalo a <strong>Power BI</strong> y utiliza <strong>Power Query</strong> para limpiar la basura antes de crear tu Dashboard. ¿Aceptas el reto?</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PARÁMETROS (Sin cambios lógicos) -->
+    <div class="card card-custom mt-4">
+        <div class="card-body p-4">
+            <h3 class="mb-4"><i class="bi bi-sliders text-primary"></i> 1. Configurar la Extracción de Datos</h3>
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold text-muted">Fecha Inicial</label>
+                    <input type="date" id="fechaInicio" class="form-control" value="2024-01-01">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold text-muted">Fecha Final</label>
+                    <input type="date" id="fechaFinal" class="form-control" value="2026-05-11">
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label fw-bold text-muted">Cantidad de Registros (Filas)</label>
+                    <input type="number" id="cantidadRegistros" class="form-control" value="2000" min="1">
+                </div>
+            </div>
+            <button class="btn btn-primary btn-lg mt-2 px-4 shadow-sm" onclick="generarDatos()">
+                <i class="bi bi-gear-fill"></i> Generar Dataset con Errores
+            </button>
+        </div>
+    </div>
+
+    <!-- EXPORTAR (Sin cambios lógicos) -->
+    <div class="card card-custom mt-4">
+        <div class="card-body p-4">
+            <h4 class="mb-3"><i class="bi bi-download text-success"></i> 2. Descargar Dataset</h4>
+            <p class="text-muted small mb-3">Elige el origen de datos con el que prefieras practicar tu conexión en Power BI:</p>
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-success px-4" onclick="descargarCSV()"><i class="bi bi-filetype-csv"></i> CSV</button>
+                <button class="btn btn-dark px-4" onclick="descargarExcel()"><i class="bi bi-file-earmark-excel"></i> Excel</button>
+                <button class="btn btn-primary px-4" onclick="descargarJSON()"><i class="bi bi-filetype-json"></i> JSON</button>
+                <button class="btn btn-danger px-4" onclick="descargarTXT()"><i class="bi bi-filetype-txt"></i> TXT</button>
+                <button class="btn btn-warning px-4 text-dark" onclick="descargarXML()"><i class="bi bi-filetype-xml"></i> XML</button>
+                <button class="btn btn-secondary px-4" onclick="descargarPDF()"><i class="bi bi-filetype-pdf"></i> PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VISTA PREVIA (Sin cambios lógicos) -->
+    <div class="card card-custom mt-4">
+        <div class="card-body p-4">
+            <h4 class="mb-4"><i class="bi bi-table text-info"></i> Vista Previa de los Datos (Sucios)</h4>
+            <div class="table-responsive">
+                <table id="tablaDatos" class="table table-striped table-hover border">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID_VENTA</th>
+                            <th>CLIENTE</th>
+                            <th>VENDEDOR</th>
+                            <th>PRODUCTO</th>
+                            <th>CATEGORIA</th>
+                            <th>CANTIDAD</th>
+                            <th>PRECIO_DOP</th>
+                            <th>CIUDAD</th>
+                            <th>FECHA_HORA</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- GUÍA COMPLETA ETL (MEJORADA DRASTICAMENTE) -->
+    <div class="etl-section">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-primary"><i class="bi bi-magic"></i> Tu Hoja de Ruta en Power Query</h2>
+            <p class="text-muted fs-5">Sigue estos pasos para transformar el caos en un modelo de datos impecable.</p>
+        </div>
+
+        <div class="timeline-container">
+            
+            <!-- Paso 1 -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <h4 class="mb-0 text-dark fw-bold">Limpiar Espacios Fantasmas</h4>
+                </div>
+                <p class="text-muted mb-2">Muchos registros tienen espacios al principio, al final o caracteres no imprimibles. Selecciona las columnas de texto (Cliente, Vendedor, Producto).</p>
+                <div class="route-box">
+                    <span class="badge bg-secondary mb-1">Español</span><br>
+                    Transformar → Formato → <strong>Recortar</strong> y luego <strong>Limpiar</strong>
+                </div>
+                <div class="route-box route-en">
+                    <span class="badge bg-info text-dark mb-1">English</span><br>
+                    Transform → Format → <strong>Trim</strong> and then <strong>Clean</strong>
+                </div>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <h4 class="mb-0 text-dark fw-bold">Reemplazo de Caracteres Corruptos</h4>
+                </div>
+                <p class="text-muted mb-2">El sistema viejo reemplazó letras por números y símbolos. Usa la herramienta de reemplazo de valores en las columnas afectadas.</p>
+                <p class="mb-2"><strong>Sustituciones necesarias:</strong> 
+                    <span class="code-snippet">@ → a</span> 
+                    <span class="code-snippet">3 → e</span> 
+                    <span class="code-snippet">0 → o</span> 
+                    <span class="code-snippet"># → (dejar en blanco)</span>
+                </p>
+                <div class="route-box">
+                    <span class="badge bg-secondary mb-1">Español</span><br>
+                    Clic derecho en la columna → <strong>Reemplazar los valores...</strong>
+                </div>
+                <div class="route-box route-en">
+                    <span class="badge bg-info text-dark mb-1">English</span><br>
+                    Right-click on column → <strong>Replace Values...</strong>
+                </div>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <h4 class="mb-0 text-dark fw-bold">Normalización de Nombres (Mayúsculas/Minúsculas)</h4>
+                </div>
+                <p class="text-muted mb-2">Los nombres de clientes y vendedores parecen estar gritando o mal escritos. Dales un formato profesional (Ej: "jUAn PErEz" → "Juan Perez").</p>
+                <div class="route-box">
+                    <span class="badge bg-secondary mb-1">Español</span><br>
+                    Transformar → Formato → <strong>Poner En Mayúsculas Cada Palabra</strong>
+                </div>
+                <div class="route-box route-en">
+                    <span class="badge bg-info text-dark mb-1">English</span><br>
+                    Transform → Format → <strong>Capitalize Each Word</strong>
+                </div>
+            </div>
+
+            <!-- Paso 4 -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">4</div>
+                    <h4 class="mb-0 text-dark fw-bold">Separación de Entidades (Fecha y Hora)</h4>
+                </div>
+                <p class="text-muted mb-2">La columna <code>FECHA_HORA</code> contiene dos datos distintos. Para un buen modelo estrella (Time Intelligence), debes separar la Fecha de la Hora.</p>
+                <div class="route-box">
+                    <span class="badge bg-secondary mb-1">Español</span><br>
+                    Seleccionar FECHA_HORA → Dividir columna → <strong>Por delimitador (Espacio)</strong>
+                </div>
+                <div class="route-box route-en">
+                    <span class="badge bg-info text-dark mb-1">English</span><br>
+                    Select FECHA_HORA → Split Column → <strong>By Delimiter (Space)</strong>
+                </div>
+            </div>
+
+            <!-- Paso 5 -->
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">5</div>
+                    <h4 class="mb-0 text-dark fw-bold">Modelado de Tipos de Datos</h4>
+                </div>
+                <p class="text-muted mb-2">Asegúrate de que el motor de Power BI entienda qué es texto y qué es matemáticas para poder sumar tus ventas.</p>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush border">
+                            <li class="list-group-item bg-light fw-bold text-center">Español</li>
+                            <li class="list-group-item">CANTIDAD → <strong>Número entero</strong></li>
+                            <li class="list-group-item">PRECIO_DOP → <strong>Número decimal fijo / Moneda</strong></li>
+                            <li class="list-group-item">FECHA → <strong>Fecha</strong></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-group list-group-flush border mt-3 mt-md-0">
+                            <li class="list-group-item bg-light fw-bold text-center">English</li>
+                            <li class="list-group-item">CANTIDAD → <strong>Whole Number</strong></li>
+                            <li class="list-group-item">PRECIO_DOP → <strong>Fixed Decimal Number</strong></li>
+                            <li class="list-group-item">FECHA → <strong>Date</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="alert alert-success mt-5 text-center shadow-sm">
+            <h5 class="mb-0"><i class="bi bi-check-circle-fill"></i> ¡Misión Cumplida! Tu dataset ahora está listo para DAX y visualizaciones.</h5>
+        </div>
+        <br>
+        <a href="index.html" class="btn btn-primary btn-lg d-block mx-auto text-center">
+  🔙 Regresar
+</a>
+
+
+    </div>
+</div>
+
+
+<!-- ==================== SCRIPTS (INTACTOS) ==================== -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+let dataset = [];
+let tabla;
+
+// Datos base
+const clientes = ["Juan Pérez","maria GARCIA","LUIS RODRIGUEZ","Ana MARTINEZ","Carlos LOPEZ","Sofía HERNANDEZ","David RAMIREZ","Lorena MARTINEZ","Pedro GOMEZ","Marta FERNANDEZ","Ju@n PEREZ","An4 LOPEZ","CARLOS RODRGUEZ","maria garcia","JUAN peREZ"];
+const vendedores = ["Pedro SANTOS","luisa GOMEZ","MARIO perez","AnA TORRES","J0SE RAMIREZ","Karla FERNANDEZ","miguel LOPEZ","SOFIA MARTINEZ","RoberT diaz"];
+const productos = ["Laptop Gamer ASUS ROG","PC Gamer Ryzen 9","MacBook Pro M3","Laptop HP Pavilion","Monitor Samsung 27","Teclado Mecánico RGB","Mouse Logitech G502","Mouse Gamer Redragon","Teclado BlueTooth","RTX 4070","SSD NVMe 1TB","Memoria RAM DDR5","Gabinete RGB","iPhone 15 Pro","UPS 1500VA"];
+
+const categorias = {"Laptop Gamer ASUS ROG":"Portátiles","PC Gamer Ryzen 9":"Escritorio","MacBook Pro M3":"Portátiles","Laptop HP Pavilion":"Portátiles","Monitor Samsung 27":"Monitores","Teclado Mecánico RGB":"Periféricos","Mouse Logitech G502":"Periféricos","Mouse Gamer Redragon":"Periféricos","Teclado BlueTooth":"Periféricos","RTX 4070":"Componentes","SSD NVMe 1TB":"Almacenamiento","Memoria RAM DDR5":"Componentes","Gabinete RGB":"Componentes","iPhone 15 Pro":"Telefonía","UPS 1500VA":"Accesorios"};
+const ciudades = ["Santo Domingo","Santiago","La Vega","San Cristóbal","Punta Cana","Bávaro","Baní"];
+const precios = {"Laptop Gamer ASUS ROG":185000,"PC Gamer Ryzen 9":145000,"MacBook Pro M3":210000,"Laptop HP Pavilion":65000,"Monitor Samsung 27":18000,"Teclado Mecánico RGB":4500,"Mouse Logitech G502":3500,"Mouse Gamer Redragon":2200,"Teclado BlueTooth":2800,"RTX 4070":52000,"SSD NVMe 1TB":6500,"Memoria RAM DDR5":7800,"Gabinete RGB":5500,"iPhone 15 Pro":95000,"UPS 1500VA":12000};
+
+// Funciones
+function randomItem(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function randomDate(start,end){ return new Date(start.getTime() + Math.random()*(end.getTime()-start.getTime())); }
+
+function generarErrores(texto){
+    const errores = [
+        () => texto.toUpperCase(),
+        () => texto.toLowerCase(),
+        () => " " + texto + " ",
+        () => texto.replace(/a/g,"@"),
+        () => texto.replace(/e/g,"3"),
+        () => texto.replace(/o/g,"0"),
+        () => texto.replace(/\s/g,"  "),
+        () => texto + "#",
+        () => texto
+    ];
+    return errores[Math.floor(Math.random()*errores.length)]();
+}
+
+function generarDatos(){
+    dataset = [];
+    const fi = new Date(document.getElementById("fechaInicio").value);
+    const ff = new Date(document.getElementById("fechaFinal").value);
+    const cant = parseInt(document.getElementById("cantidadRegistros").value) || 2000;
+
+    for(let i=1; i<=cant; i++){
+        const prod = randomItem(productos);
+        const fecha = randomDate(fi, ff);
+        dataset.push({
+            ID_VENTA: i,
+            CLIENTE: generarErrores(randomItem(clientes)),
+            VENDEDOR: generarErrores(randomItem(vendedores)),
+            PRODUCTO: generarErrores(prod),
+            CATEGORIA: categorias[prod],
+            CANTIDAD: Math.floor(Math.random()*8)+1,
+            PRECIO_DOP: precios[prod],
+            CIUDAD: randomItem(ciudades),
+            FECHA_HORA: fecha.toLocaleDateString('es-DO') + " " + fecha.toLocaleTimeString('es-DO')
+        });
+    }
+    cargarTabla();
+}
+
+function cargarTabla(){
+    if($.fn.DataTable.isDataTable('#tablaDatos')) $('#tablaDatos').DataTable().destroy();
+    
+    let html = "";
+    dataset.forEach(r => {
+        html += `<tr>
+            <td>${r.ID_VENTA}</td>
+            <td>${r.CLIENTE}</td>
+            <td>${r.VENDEDOR}</td>
+            <td>${r.PRODUCTO}</td>
+            <td>${r.CATEGORIA}</td>
+            <td>${r.CANTIDAD}</td>
+            <td>${r.PRECIO_DOP.toLocaleString('es-DO')}</td>
+            <td>${r.CIUDAD}</td>
+            <td>${r.FECHA_HORA}</td>
+        </tr>`;
+    });
+    document.querySelector("#tablaDatos tbody").innerHTML = html;
+
+    $('#tablaDatos').DataTable({ pageLength:15, responsive:true, language:{url:"https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json"} });
+}
+
+// Descargas
+function descargarArchivo(nombre, contenido, tipo){
+    const blob = new Blob([contenido], {type:tipo});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = nombre;
+    a.click();
+}
+
+function descargarCSV(){
+    let csv = Object.keys(dataset[0]).join(",") + "\n";
+    dataset.forEach(r => csv += Object.values(r).join(",") + "\n");
+    descargarArchivo("ventas_tecnologia.csv", csv, "text/csv");
+}
+function descargarJSON(){ descargarArchivo("ventas_tecnologia.json", JSON.stringify(dataset,null,2), "application/json"); }
+function descargarTXT(){ descargarArchivo("ventas_tecnologia.txt", dataset.map(r=>JSON.stringify(r)).join("\n"), "text/plain"); }
+
+function descargarXML(){
+    let xml = `<ventas>\n`;
+    dataset.forEach(r => {
+        xml += `  <venta>\n`;
+        Object.keys(r).forEach(k => xml += `    <${k}>${r[k]}</${k}>\n`);
+        xml += `  </venta>\n`;
+    });
+    xml += `</ventas>`;
+    descargarArchivo("ventas_tecnologia.xml", xml, "application/xml");
+}
+
+function descargarExcel(){
+    const ws = XLSX.utils.json_to_sheet(dataset);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Ventas");
+    XLSX.writeFile(wb, "ventas_tecnologia.xlsx");
+}
+
+async function descargarPDF(){
+    if(dataset.length===0) return alert("Genera datos primero");
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF("l", "mm", "a4");
+    doc.text("Dataset Ventas Tecnología - ETL Power BI", 14, 15);
+    doc.text("Generado: " + new Date().toLocaleString('es-DO'), 14, 22);
+
+    const head = [["ID_VENTA","CLIENTE","VENDEDOR","PRODUCTO","CATEGORIA","CANTIDAD","PRECIO_DOP","CIUDAD","FECHA_HORA"]];
+    const body = dataset.map(r => [r.ID_VENTA,r.CLIENTE,r.VENDEDOR,r.PRODUCTO,r.CATEGORIA,r.CANTIDAD,r.PRECIO_DOP,r.CIUDAD,r.FECHA_HORA]);
+
+    doc.autoTable({head, body, startY:30, theme:"grid", styles:{fontSize:7}});
+    doc.save("ventas_tecnologia_etl.pdf");
+}
+
+window.onload = generarDatos;
+</script>
+</body>
+</html>

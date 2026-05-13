@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller Práctico de Power BI - Diplomado</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome (Iconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Prism.js (Tema oscuro para código DAX) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+    <style>
+        /* ================= VARIABLES CORPORATIVAS ================= */
+        :root {
+            --pbi-yellow: #F2C811;
+            --pbi-yellow-dark: #dcae08;
+            --pbi-dark: #1F1F1F;
+            --pbi-gray: #EAEAEA;
+            --text-main: #333333;
+            --accent-blue: #118DFF;
+        }
+
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background-color: #f0f2f5; color: var(--text-main); font-size: 1.15rem; line-height: 1.8; position: relative; }
+
+        /* ================= TIPOGRAFÍA ================= */
+        h1, h2, h3, h4, h5 { font-weight: 700; color: var(--pbi-dark); margin-top: 2rem; margin-bottom: 1.2rem; }
+        h1 { font-size: 3.5rem; letter-spacing: -1px; }
+        h2 { font-size: 2.2rem; border-bottom: 4px solid var(--pbi-yellow); padding-bottom: 10px; display: inline-block; text-transform: uppercase; margin-top: 3rem;}
+        h4 { font-size: 1.4rem; color: #1a5276; border-left: 4px solid var(--accent-blue); padding-left: 10px; margin-top: 2.5rem; }
+
+        /* ================= HERO SECTION ================= */
+        .hero { background: linear-gradient(135deg, #0a0a0a 0%, #2a2a2a 100%); color: white; padding: 100px 0; border-bottom: 8px solid var(--pbi-yellow); position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(242,200,17,0.05) 0%, transparent 60%); animation: pulse 10s infinite alternate; }
+        @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.2); } }
+
+        /* ================= SIDEBAR ================= */
+        .sidebar { position: sticky; top: 20px; background: white; border-radius: 12px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.06); border-top: 5px solid var(--pbi-yellow); }
+        .sidebar .nav-link { color: #555; font-weight: 600; font-size: 1rem; padding: 10px 15px; border-radius: 8px; margin-bottom: 5px; transition: all 0.2s ease-in-out; }
+        .sidebar .nav-link:hover { background-color: #f8f9fa; transform: translateX(5px); color: var(--accent-blue); }
+        .sidebar .nav-link.active { background-color: var(--pbi-yellow); color: var(--pbi-dark); transform: none; }
+
+        /* ================= CAJAS Y SECCIONES ================= */
+        .content-section { background: white; padding: 50px; border-radius: 16px; box-shadow: 0 5px 30px rgba(0,0,0,0.03); margin-bottom: 40px; }
+        .highlight-box { background-color: #f8faff; border-left: 6px solid var(--accent-blue); padding: 25px; border-radius: 0 12px 12px 0; margin: 30px 0; font-size: 1.1rem; }
+        .warning-box { background-color: #fffcf0; border-left: 6px solid var(--pbi-yellow); padding: 25px; border-radius: 0 12px 12px 0; margin: 30px 0; }
+
+        /* ================= TABLA Y CÓDIGO ================= */
+        .table-wrapper { max-height: 400px; overflow-y: auto; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #eee; }
+        .table th { background-color: var(--pbi-dark); color: white; position: sticky; top: 0; z-index: 1; font-weight: 500; letter-spacing: 1px;}
+        .table td { font-size: 0.95rem; vertical-align: middle; }
+        pre { border-radius: 12px !important; font-size: 1.05rem !important; margin: 25px 0 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        /* ================= SIMULADOR DASHBOARD CSS ================= */
+        .pbi-canvas { background-color: #f3f2f1; padding: 30px; border-radius: 12px; border: 1px solid #ddd; box-shadow: inset 0 0 30px rgba(0,0,0,0.03); }
+        .pbi-card { background-color: white; border-radius: 8px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); height: 100%; transition: transform 0.2s; }
+        .pbi-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .pbi-kpi-value { font-size: 2.2rem; font-weight: 800; color: #252423; line-height: 1.1; margin-top: 5px; }
+        .pbi-kpi-label { font-size: 0.9rem; color: #666; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
+        .pbi-title { font-size: 1.1rem; font-weight: 700; color: #333; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 8px; }
+        .pbi-donut { width: 180px; height: 180px; border-radius: 50%; background: conic-gradient(#118DFF 0% 40%, #12239E 40% 65%, #E66C37 65% 85%, #00B8AA 85% 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .pbi-donut-inner { width: 110px; height: 110px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #333; }
+        .pbi-slicer { background-color: white; border: 1px solid #ccc; padding: 8px 15px; border-radius: 5px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body data-bs-spy="scroll" data-bs-target="#menu-lateral" data-bs-offset="120" tabindex="0">
+
+    <!-- HERO SECTION -->
+    <header class="hero text-center text-lg-start">
+        <div class="container position-relative z-1">
+            <div class="row align-items-center">
+                <div class="col-lg-8 text-center text-lg-start">
+                    <h1 class="text-white"><i class="fas fa-chart-line text-warning me-3"></i>Taller Práctico de Power BI</h1>
+                    <p class="lead fs-3 mt-3 text-light" style="font-weight: 300;">Manual del Diplomado: De la extracción de datos crudos al Storytelling Corporativo.</p>
+                    <div class="mt-4">
+                        <span class="badge bg-light text-dark fs-5 py-2 px-3 me-2"><i class="fas fa-clock text-primary"></i> Duración: 18 Horas</span>
+                    </div>
+                </div>
+                <div class="col-lg-4 d-none d-lg-block text-center">
+                    <i class="fas fa-database fa-5x text-secondary opacity-50 mb-3 mx-2"></i>
+                    <i class="fas fa-arrow-right fa-2x text-warning mx-2"></i>
+                    <i class="fas fa-chart-pie fa-7x text-white mx-2"></i>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container-fluid my-5 px-lg-5">
+        <div class="row">
+            
+            <!-- MENÚ LATERAL (SIDEBAR) -->
+            <div class="col-lg-3 d-none d-lg-block">
+                <nav id="menu-lateral" class="sidebar flex-column nav nav-pills">
+                    <h5 class="text-center mb-4 pb-3 border-bottom fw-bold text-uppercase" style="letter-spacing: 1px; color: #888;">Temario Oficial</h5>
+                    <a class="nav-link" href="#intro-objetivo"><i class="fas fa-bullseye fa-fw me-2"></i> Objetivo y Dirigido a</a>
+                    <a class="nav-link" href="#datos"><i class="fas fa-file-csv fa-fw me-2"></i> Set de Datos (Práctica)</a>
+                    <a class="nav-link" href="#mod1"><i class="fas fa-globe fa-fw me-2"></i> MÓDULO 1: Introducción</a>
+                    <a class="nav-link" href="#mod2"><i class="fas fa-broom fa-fw me-2"></i> MÓDULO 2: Transformación</a>
+                    <a class="nav-link" href="#mod3"><i class="fas fa-project-diagram fa-fw me-2"></i> MÓDULO 3: Modelado</a>
+                    <a class="nav-link" href="#mod4"><i class="fas fa-calculator fa-fw me-2"></i> MÓDULO 4: DAX Esencial</a>
+                    <a class="nav-link" href="#mod5"><i class="fas fa-palette fa-fw me-2"></i> MÓDULO 5: Dashboards</a>
+                    <a class="nav-link" href="#mod6"><i class="fas fa-cloud-upload-alt fa-fw me-2"></i> MÓDULO 6: Publicación</a>
+                </nav>
+            </div>
+
+            <!-- CONTENIDO PRINCIPAL -->
+            <div class="col-lg-9">
+                
+                <!-- OBJETIVO Y DIRIGIDO A -->
+                <section id="intro-objetivo" class="content-section">
+                    <h2><i class="fas fa-bullseye text-primary"></i> Objetivo del Taller</h2>
+                    <ul class="fs-5 mt-4 mb-5">
+                        <li><i class="fas fa-check text-success me-2"></i> Conectar, transformar y modelar datos en Power BI.</li>
+                        <li><i class="fas fa-check text-success me-2"></i> Crear modelos en esquema estrella.</li>
+                        <li><i class="fas fa-check text-success me-2"></i> Construir medidas DAX esenciales para negocio.</li>
+                        <li><i class="fas fa-check text-success me-2"></i> Diseñar dashboards claros, profesionales y funcionales.</li>
+                        <li><i class="fas fa-check text-success me-2"></i> Publicar reportes y compartirlos correctamente.</li>
+                    </ul>
+
+                    <h2><i class="fas fa-users text-primary"></i> Dirigido a</h2>
+                    <ul class="fs-5 mt-4">
+                        <li>Analistas, Finanzas, Ventas, RRHH.</li>
+                        <li>Usuarios de Excel que quieren migrar a Power BI.</li>
+                        <li>Profesionales que ya usan Power BI de forma básica.</li>
+                    </ul>
+                </section>
+
+                <!-- SET DE DATOS (Sección Preparatoria Práctica) -->
+                <section id="datos" class="content-section border border-primary border-2">
+                    <h2 class="mb-4"><i class="fas fa-laptop-code text-primary"></i> Preparación: Set de Datos de Trabajo</h2>
+                    <p>La teoría sin práctica es estéril. En este diplomado aplicaremos todo el temario ensuciándonos las manos con datos reales. Utilizaremos el archivo <code>ventas_tecnologia_500_registros.csv</code>, el cual simula la facturación de la empresa <strong>TechStore</strong>.</p>
+                    
+                    <div class="warning-box">
+                        <h5 class="fw-bold"><i class="fas fa-bug text-danger"></i> Diagnóstico de la Data (Errores de la vida real):</h5>
+                        <ul class="mb-0">
+                            <li><strong>Inconsistencia de Textos:</strong> La columna CLIENTE tiene nombres como <em>"LUIS GARCIA"</em> y <em>"rafael CRUZ"</em> mezclados.</li>
+                            <li><strong>Anomalía de Tiempo:</strong> FECHA_HORA tiene valores como <em>5/8/2025 4:32</em>. Esto requerirá limpieza obligatoria.</li>
+                            <li><strong>Cálculos faltantes:</strong> Solo tenemos CANTIDAD y PRECIO_USD. Falta el total.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Botón Descarga -->
+                    <div class="text-center my-4">
+                        <a href="ventas_tecnologia_500_registros.csv" download="ventas_tecnologia_500_registros.csv" class="btn btn-success btn-lg px-5 py-3 shadow" style="border-radius: 50px; font-weight: bold;">
+                            <i class="fas fa-download fa-lg me-2"></i> Descargar CSV de Trabajo (500 Filas)
+                        </a>
+                        <p class="text-muted mt-2 small">Guarde este archivo en una carpeta fácilmente accesible, como "Escritorio/Diplomado_PBI".</p>
+                    </div>
+
+                    <h5 class="fw-bold mb-3">Previsualización (Muestra: Registros 1 al 15)</h5>
+                    <div class="table-wrapper">
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>CLIENTE</th>
+                                    <th>PRODUCTO</th>
+                                    <th>CANT.</th>
+                                    <th>PRECIO</th>
+                                    <th>CIUDAD</th>
+                                    <th class="text-warning">FECHA_HORA</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1</td><td>LUIS GARCIA</td><td>Mouse Inalámbrico</td><td>4</td><td>180</td><td>San Pedro</td><td>5/8/2025 4:32</td></tr>
+                                <tr><td>2</td><td>Carlos FERNANDEZ</td><td>Teclado Mecánico RGB</td><td>5</td><td>1200</td><td>Baní</td><td>12/17/2025 23:54</td></tr>
+                                <tr><td>3</td><td>Luisa GOMEZ</td><td>Teclado Mecánico RGB</td><td>8</td><td>250</td><td>Punta Cana</td><td>1/5/2026 20:55</td></tr>
+                                <tr><td>4</td><td>David HERNANDEZ</td><td>SSD NVMe 1TB</td><td>6</td><td>1200</td><td>San Pedro</td><td>3/19/2025 15:45</td></tr>
+                                <tr><td>5</td><td>Marta GARCIA</td><td>Tarjeta Gráfica RTX 4070</td><td>6</td><td>75</td><td>Baní</td><td>12/13/2025 2:59</td></tr>
+                                <tr><td>6</td><td>Sara MARTINEZ</td><td>Laptop Lenovo ThinkPad</td><td>7</td><td>50</td><td>Puerto Plata</td><td>10/13/2025 0:15</td></tr>
+                                <tr><td>7</td><td>María PEREZ</td><td>SSD NVMe 1TB</td><td>6</td><td>3000</td><td>Santiago</td><td>8/25/2025 17:42</td></tr>
+                                <tr><td>8</td><td>rafael CRUZ</td><td>SSD NVMe 1TB</td><td>8</td><td>50</td><td>Bávaro</td><td>3/8/2025 7:22</td></tr>
+                                <tr><td>9</td><td>Elena VARGAS</td><td>Refrigeración Líquida</td><td>3</td><td>1800</td><td>San Cristóbal</td><td>4/19/2026 6:03</td></tr>
+                                <tr><td>10</td><td>José FERNANDEZ</td><td>Fuente de Poder 850W</td><td>3</td><td>50</td><td>Santiago</td><td>1/12/2025 5:50</td></tr>
+                                <tr><td>11</td><td>Sara MARTINEZ</td><td>Fuente de Poder 850W</td><td>7</td><td>75</td><td>Punta Cana</td><td>11/20/2025 2:56</td></tr>
+                                <tr><td>12</td><td>Carlos LOPEZ</td><td>Webcam Full HD</td><td>1</td><td>1200</td><td>Bávaro</td><td>3/11/2025 17:51</td></tr>
+                                <tr><td>13</td><td>LUIS GARCIA</td><td>SSD NVMe 1TB</td><td>1</td><td>250</td><td>Moca</td><td>5/12/2025 18:37</td></tr>
+                                <tr><td>14</td><td>LUIS GARCIA</td><td>Laptop HP Pavilion</td><td>3</td><td>900</td><td>Moca</td><td>4/18/2026 1:54</td></tr>
+                                <tr><td>15</td><td>Carlos LOPEZ</td><td>Gabinete Gamer RGB</td><td>3</td><td>1500</td><td>Santiago</td><td>2/19/2025 4:03</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <div class="text-center my-5 py-3"><h1 class="text-uppercase fw-bold" style="color: #ccc; letter-spacing: 5px;">Desarrollo del Temario</h1></div>
+
+                <!-- MÓDULO 1 -->
+                <section id="mod1" class="content-section">
+                    <h2>MÓDULO 1 – Introducción y Ecosistema Power BI</h2>
+                    
+                    <h4>Instalación de Power BI Desktop (Paso a Paso)</h4>
+                    <p>Antes de iniciar, asegúrese de tener la herramienta oficial de Microsoft. Es 100% gratuita para PC.</p>
+                    <ol class="fs-5">
+                        <li>Abra su navegador y visite el enlace oficial: <a href="https://powerbi.microsoft.com/es-es/desktop/" target="_blank">Descargar Power BI Desktop</a>.</li>
+                        <li>Haga clic en el botón amarillo <strong>"Descargar gratis"</strong> (se abrirá la Microsoft Store) o en "Ver opciones de descarga avanzada" para bajar el instalador <code>.exe</code>.</li>
+                        <li>Ejecute el instalador, seleccione su idioma (Español), acepte los términos y haga clic en <strong>Siguiente</strong> hasta finalizar la instalación.</li>
+                        <li>Abra Power BI Desktop. Si le pide iniciar sesión, puede hacerlo o simplemente cerrar la ventana emergente de bienvenida para empezar a trabajar localmente.</li>
+                    </ol>
+
+                    <h4>¿Qué es Power BI y para qué se usa?</h4>
+                    <p>Power BI no es simplemente un generador de gráficos; es el <strong>motor analítico empresarial</strong> más poderoso democratizado por Microsoft. Permite a las organizaciones conectar diversas fuentes de datos, prepararlos, modelarlos y visualizarlos para hacer <em>Storytelling</em> y tomar decisiones. <br><br>
+                    <strong>Líder del Mercado:</strong> Durante más de 16 años consecutivos, Microsoft (gracias a Power BI) es el líder indiscutible en el Cuadrante Mágico de Gartner para Plataformas de Business Intelligence, superando a Tableau y Qlik.</p>
+
+                    <h4>Power BI Desktop vs Servicio</h4>
+                    <ul>
+                        <li><strong>Power BI Desktop:</strong> El entorno de desarrollo local y gratuito. Aquí nos conectamos, programamos en DAX y diseñamos.</li>
+                        <li><strong>Power BI Service (Nube):</strong> La plataforma de colaboración web (SaaS). Aquí se publican los modelos y se programan actualizaciones automáticas.</li>
+                    </ul>
+
+                    <h4>Concepto de modelo semántico</h4>
+                    <p>El Modelo Semántico es la estructura de datos subyacente (tablas, relaciones y cálculos) que almacena, procesa y define las reglas de negocio antes de hacer un gráfico en el lienzo.</p>
+
+                    <h4>Flujo básico: Datos → Modelo → Visualización → Publicación</h4>
+                    <p>Este es el ciclo de vida exacto que aplicaremos hoy con los datos de TechStore. Extraeremos el CSV, lo limpiaremos, crearemos relaciones, armaremos el dashboard y lo subiremos a la web.</p>
+
+                    <h4>Tipos de conexión: Import (solo se explica este)</h4>
+                    <p>Utilizaremos la conexión <strong>IMPORT MODE</strong>. Esto significa que Power BI creará una copia altamente comprimida del archivo CSV dentro de su propio motor en memoria (VertiPaq). Garantiza velocidad extrema al hacer clic en los gráficos y permite el uso de todas las funciones DAX.</p>
+                    
+                    <div class="highlight-box">
+                        <strong>Paso a Paso - Importación del CSV:</strong>
+                        <ol class="mb-0 mt-2">
+                            <li>En la cinta de opciones superior de Power BI Desktop (Pestaña <strong>Inicio</strong>), haga clic en <strong>Obtener Datos</strong>.</li>
+                            <li>Seleccione la opción <strong>Texto/CSV</strong> en la lista desplegable.</li>
+                            <li>Navegue por sus carpetas y seleccione el archivo <code>ventas_tecnologia_500_registros.csv</code> que descargó previamente. Haga clic en <strong>Abrir</strong>.</li>
+                            <li>Aparecerá una ventana de previsualización amarilla. <strong>¡Regla de oro!</strong> Nunca haga clic en "Cargar". Haga clic siempre en el botón <strong>Transformar datos</strong>. Esto abrirá automáticamente el editor de Power Query.</li>
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 2 -->
+                <section id="mod2" class="content-section">
+                    <h2>MÓDULO 2 – Transformación de Datos con Power Query</h2>
+                    <p>Power Query automatiza la extracción, transformación y carga (ETL). Es "La Cocina" de los datos. Toda la limpieza que hagamos quedará grabada como pasos automatizados.</p>
+                    
+                    <h4>Limpieza de datos</h4>
+                    <p><strong>El problema:</strong> La columna <code>CLIENTE</code> de nuestro CSV tiene inconsistencias como <em>"LUIS GARCIA"</em> y <em>"rafael CRUZ"</em>. <br>
+                    <strong>Paso a Paso de Solución:</strong>
+                    <ol>
+                        <li>En la ventana de Power Query, haga un clic izquierdo sobre el título de la columna <code>CLIENTE</code> para seleccionarla.</li>
+                        <li>En la cinta superior, vaya a la pestaña <strong>Transformar</strong>.</li>
+                        <li>Busque el botón <strong>Formato</strong> (tiene un icono con una letra 'A' grande y una 'a' pequeña) y haga clic.</li>
+                        <li>Seleccione <strong>Poner en mayúscula cada palabra</strong>. Verá cómo "rafael CRUZ" cambia instantáneamente a "Rafael Cruz", y a su derecha en el panel "Pasos Aplicados" aparecerá un nuevo registro de esta acción.</li>
+                    </ol></p>
+
+                    <h4>Cambiar tipos de datos</h4>
+                    <p><strong>Anomalía temporal:</strong> La columna <code>FECHA_HORA</code> tiene valores como <em>5/8/2025 4:32</em>. Un motor analítico sufre con esta granularidad.
+                    <br><strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>Seleccione la columna <code>FECHA_HORA</code> haciendo clic en su título.</li>
+                        <li>En la pestaña <strong>Inicio</strong>, haga clic en <strong>Dividir columna</strong> y luego en <strong>Por delimitador</strong>.</li>
+                        <li>En la ventana emergente, asegúrese de que el delimitador seleccionado sea <strong>Espacio</strong> y haga clic en <strong>Aceptar</strong>. Power Query dividirá la columna en <code>FECHA_HORA.1</code> y <code>FECHA_HORA.2</code>.</li>
+                        <li>Haga doble clic rápido sobre el título <code>FECHA_HORA.1</code> y escriba <strong>Fecha</strong>. Presione Enter.</li>
+                        <li>Haga doble clic rápido sobre el título <code>FECHA_HORA.2</code> y escriba <strong>Hora</strong>. Presione Enter.</li>
+                        <li><strong>Validar el tipo de dato:</strong> Haga clic en el ícono pequeño que está justo a la izquierda de la palabra "Fecha" (probablemente dice ABC/123) y seleccione <strong>Fecha</strong>. Repita el proceso en la columna "Hora" y seleccione el tipo de dato <strong>Hora</strong>.</li>
+                    </ol></p>
+
+                    <h4>Quitar duplicados y nulos</h4>
+                    <p><strong>Paso a Paso conceptual:</strong> Si estuviera limpiando un catálogo de productos y necesitara filas únicas, seleccionaría la columna del ID del producto, haría <strong>clic derecho</strong> sobre el título y seleccionaría <strong>Quitar duplicados</strong>. Si encontrara celdas vacías (Null), haría <strong>clic derecho > Reemplazar valores</strong>, escribiendo "null" en buscar, y "Desconocido" en reemplazar por.</p>
+
+                    <h4>Columnas calculadas</h4>
+                    <p>Necesitamos el ingreso total por línea. <br>
+                    <strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>En la cinta superior, vaya a la pestaña <strong>Agregar columna</strong>.</li>
+                        <li>Haga clic en el botón <strong>Columna personalizada</strong>.</li>
+                        <li>En la ventana emergente, en la casilla "Nuevo nombre de columna", borre el texto y escriba: <code>Subtotal_Venta</code>.</li>
+                        <li>En el cuadro grande de "Fórmula de columna de cliente", escriba exactamente esto: <code>= [CANTIDAD] * [PRECIO_USD]</code> (Puede ayudar hacer doble clic en los campos de la lista de la derecha para no equivocarse al escribir).</li>
+                        <li>Haga clic en <strong>Aceptar</strong>.</li>
+                        <li>Cambie el tipo de dato de su nueva columna: Clic en el icono ABC/123 y seleccione <strong>Número Decimal Fijo</strong> (este es el formato de moneda en Power BI).</li>
+                    </ol></p>
+
+                    <h4>Merge y Append (casos simples)</h4>
+                    <ul>
+                        <li><strong>Append (Anexar):</strong> Poner datos <em>debajo</em> de otros. <strong>Paso a paso:</strong> Pestaña Inicio > Anexar consultas. Selecciona la tabla vieja y la tabla nueva. (Ej: Unir las ventas del 2026 con las del 2025).</li>
+                        <li><strong>Merge (Combinar):</strong> Cruzar datos (Como un BUSCARV). <strong>Paso a paso:</strong> Pestaña Inicio > Combinar consultas. Selecciona la tabla de Ventas arriba, la tabla de Costos de Envío abajo, hace clic en la columna "Ciudad" en ambas tablas para unirlas, y da Aceptar. Luego expande la columna resultante.</li>
+                    </ul>
+
+                    <h4>Buenas prácticas de preparación</h4>
+                    <p>Eliminar todas las columnas que no se van a utilizar. Nombrar cada "Paso Aplicado". <br>
+                    <strong>Cierre de ETL:</strong> Una vez hechos todos los pasos anteriores, vaya a la pestaña <strong>Inicio</strong> en Power Query, y haga clic en el botón grande de la esquina superior izquierda llamado <strong>Cerrar y aplicar</strong>. Espere a que la barra de carga finalice e inyecte los datos a Power BI Desktop.</p>
+                </section>
+
+                <!-- MÓDULO 3 -->
+                <section id="mod3" class="content-section">
+                    <h2>MÓDULO 3 – Modelado de Datos para Negocio</h2>
+                    
+                    <div class="highlight-box">
+                        <h4>Modelo en esquema estrella y Tablas de hechos y dimensiones</h4>
+                        <p>La arquitectura analítica corporativa ideal separa los datos en:</p>
+                        <ul>
+                            <li><strong>Tablas de Hechos (Fact):</strong> Lo que ocurre transaccionalmente. Contiene números, eventos y llaves foráneas. (Nuestra tabla de Ventas TechStore). Tienen miles o millones de filas.</li>
+                            <li><strong>Tablas de Dimensiones (Dim):</strong> El contexto descriptivo. Catálogos únicos. (Ej: Tabla de Clientes, Tabla de Productos, Tabla de Ciudades). Nunca tienen filas duplicadas.</li>
+                        </ul>
+                        <p class="mb-0"><em>Aclaración Práctica: Para maximizar el enfoque de este primer taller en DAX, mantendremos Ventas como una tabla plana (Flat Table) importada, pero incorporaremos la dimensión obligatoria y más crítica de todo el BI: El Tiempo.</em></p>
+                    </div>
+
+                    <h4>Tabla calendario</h4>
+                    <p>Nunca confíe en las fechas automáticas de Power BI (Auto Date/Time). Necesitamos nuestra propia tabla dimensional de tiempo.<br>
+                    <strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>En la interfaz principal de Power BI Desktop, haga clic en el icono de <strong>Vista de Datos</strong> (el segundo icono en la barra lateral izquierda, parecido a una tablita).</li>
+                        <li>En la cinta superior, vaya a la pestaña <strong>Modelado</strong>.</li>
+                        <li>Haga clic en <strong>Nueva Tabla</strong>.</li>
+                        <li>La barra de fórmulas aparecerá en la parte superior. Borre lo que diga y pegue exactamente el siguiente código DAX:</li>
+                    </ol>
+                    </p>
+<pre><code class="language-sql">Calendario = 
+ADDCOLUMNS(
+    CALENDARAUTO(),
+    "Año", YEAR([Date]),
+    "Mes Numero", MONTH([Date]),
+    "Mes Nombre", FORMAT([Date], "MMMM"),
+    "Trimestre", "Q" & FORMAT([Date], "Q"),
+    "Día Semana", FORMAT([Date], "dddd")
+)</code></pre>
+                    <p><ol start="5">
+                        <li>Presione <strong>Enter</strong> en su teclado o haga clic en el icono del check (✓) a la izquierda de la fórmula. Verá cómo se genera mágicamente una tabla con todas las fechas desde el inicio de sus ventas.</li>
+                    </ol></p>
+
+                    <h4>Relaciones: cardinalidad y dirección</h4>
+                    <p>Ahora debemos conectar nuestra Dimensión con nuestro Hecho. <br>
+                    <strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>Haga clic en el icono de <strong>Vista de Modelo</strong> (el tercer icono en la barra lateral izquierda, parecido a un diagrama de flujo).</li>
+                        <li>Verá dos cuadros: Uno dice <code>Ventas</code> y otro dice <code>Calendario</code>.</li>
+                        <li>Haga clic mantenido (arrastre) sobre la palabra <code>Date</code> en la tabla Calendario, y suéltelo exactamente sobre la palabra <code>Fecha</code> en la tabla de Ventas.</li>
+                        <li>Aparecerá una línea conectando ambas tablas. Si pone el mouse sobre la línea, verá que tiene un <strong>1</strong> del lado del Calendario y un asterisco <strong>(*)</strong> del lado de Ventas. Esto confirma que su <strong>Cardinalidad es de 1 a Muchos</strong>. Verá también una flecha pequeña en el medio de la línea; esta es la <strong>dirección del filtro</strong>, y debe apuntar hacia Ventas.</li>
+                    </ol></p>
+
+                    <h4>Buenas prácticas de modelado</h4>
+                    <p><strong>Paso a Paso:</strong> En la vista de Modelo, haga clic derecho sobre la columna <code>Fecha</code> en la tabla Ventas y seleccione <strong>Ocultar en la vista de informes</strong> (verá que aparece un ojo tachado). Esto se hace para que el usuario final, al crear gráficos, use obligatoriamente los meses y años de su tabla <code>Calendario</code> y no se confunda usando la fecha técnica de la tabla de hechos.</p>
+                </section>
+
+                <!-- MÓDULO 4 -->
+                <section id="mod4" class="content-section">
+                    <h2>MÓDULO 4 – DAX Esencial para Análisis</h2>
+                    
+                    <h4>Medidas vs columnas calculadas</h4>
+                    <p>Las columnas (como la que hicimos de Subtotal en Power Query) se guardan en el disco duro fila por fila, ocupando memoria física. Las <strong>Medidas (Measures)</strong> en DAX son algoritmos analíticos que viven en la memoria virtual (RAM) y se calculan sobre la marcha en milisegundos según lo que el usuario filtre en el lienzo. DAX sirve principalmente para crear Medidas.</p>
+
+                    <h4>SUM, COUNT, DISTINCTCOUNT</h4>
+                    <p>Creemos nuestras métricas base. Repita este proceso paso a paso para cada fórmula: <br>
+                    <strong>Paso a Paso de creación de Medida:</strong>
+                    <ol>
+                        <li>En el panel lateral derecho llamado "Datos", haga <strong>clic derecho</strong> sobre el nombre de la tabla <code>Ventas</code>.</li>
+                        <li>Seleccione la opción <strong>Nueva Medida</strong>.</li>
+                        <li>La barra de fórmulas (en la parte superior de la pantalla) se activará. Copie una de las fórmulas de abajo, péguela ahí y presione <strong>Enter</strong> o el icono del check (✓).</li>
+                        <li>Verá que en su panel de Datos aparece la nueva medida acompañada de un pequeño icono de calculadora.</li>
+                    </ol>
+                    </p>
+<pre><code class="language-sql">-- Suma el subtotal que creamos en Power Query.
+Ingresos Totales = SUM(Ventas[Subtotal_Venta])
+
+-- Suma la cantidad de hardware físico despachado.
+Total Unidades = SUM(Ventas[CANTIDAD])
+
+-- Cuenta las transacciones/facturas emitidas contando el número de filas.
+Total Transacciones = COUNTROWS(Ventas)
+
+-- Cuenta clientes únicos sin importar si el mismo cliente vino 3 veces a la tienda.
+Clientes Unicos = DISTINCTCOUNT(Ventas[CLIENTE])</code></pre>
+
+                    <h4>CALCULATE (conceptual y práctico)</h4>
+                    <p><code>CALCULATE</code> es la función más importante, vital y revolucionaria de DAX. Modifica el contexto de evaluación de una medida, imponiendo filtros estrictos dentro del código que ignoran lo que el usuario haga en pantalla. <br>
+                    (Repita el proceso de <em>clic derecho > Nueva Medida</em> para crear estas):</p>
+<pre><code class="language-sql">-- Queremos aislar contablemente los ingresos exclusivos del producto estrella.
+Ingresos Laptops Gamer = 
+CALCULATE(
+    [Ingresos Totales],
+    Ventas[PRODUCTO] = "Laptop Gamer ASUS ROG"
+)
+
+-- Queremos auditar solo a la capital del cibao (Santiago).
+Ingresos Santiago = 
+CALCULATE(
+    [Ingresos Totales],
+    Ventas[CIUDAD] = "Santiago"
+)</code></pre>
+
+                    <h4>Medidas de negocio: Ventas, Total acumulado, Crecimiento</h4>
+                    <p>La Inteligencia de Tiempo (Time Intelligence) es lo que justifica el salario de un analista. Solo funciona porque ya relacionamos correctamente la tabla <code>Calendario</code>. <br>
+                    (Repita el proceso de <em>Nueva Medida</em>):</p>
+<pre><code class="language-sql">-- Total acumulado en lo que va del Año (YTD - Year To Date). Muy usado en finanzas.
+Ingresos YTD = TOTALYTD([Ingresos Totales], Calendario[Date])
+
+-- Viaja al pasado: Calcula los ingresos exactos del mismo periodo, pero de hace 1 año atrás.
+Ingresos Año Anterior = 
+CALCULATE(
+    [Ingresos Totales], 
+    SAMEPERIODLASTYEAR(Calendario[Date])
+)
+
+-- Tasa de Crecimiento Porcentual (Year Over Year). Validar si crecimos o perdimos dinero.
+% Crecimiento YoY = 
+DIVIDE(
+    ([Ingresos Totales] - [Ingresos Año Anterior]), 
+    [Ingresos Año Anterior], 
+    0
+)</code></pre>
+                </section>
+
+                <!-- MÓDULO 5 -->
+                <section id="mod5" class="content-section">
+                    <h2>MÓDULO 5 – Visualizaciones y Diseño de Dashboards</h2>
+                    
+                    <h4>Principios básicos de diseño visual</h4>
+                    <p>Hacer gráficos es fácil, hacer <em>Storytelling</em> es un arte. Aplicaremos el principio de Neurodiseño conocido como el <strong>Patrón de Lectura en Z</strong> (el ojo humano occidental escanea la pantalla de arriba a la izquierda hacia abajo a la derecha). La "Zona VIP" para los KPIs críticos es la esquina superior izquierda. Evitaremos los colores tipo "Semáforo" (rojos y verdes puros cansan la vista) y usaremos temas profesionales. <br>
+                    <em>Paso a Paso de Tema:</em> Vaya a la pestaña <strong>Ver</strong> en la cinta superior, despliegue la galería de <strong>Temas</strong> y seleccione "Ejecutivo" o el color azul oficial de su empresa.</p>
+
+                    <h4>Uso correcto de gráficos, KPIs, Segmentadores y Tooltips</h4>
+                    <p>A continuación, detallamos el paso a paso exacto para construir cada pieza del lienzo. Asegúrese de estar en la <strong>Vista de Informe</strong> (El primer icono arriba a la izquierda, parecido a una gráfica de barras).</p>
+
+                    <div class="highlight-box">
+                        <ul class="fs-6 text-dark" style="list-style-type: square;">
+                            <li class="mb-3"><strong>KPIs (Tarjetas Globales):</strong> En el panel "Visualizaciones" a la derecha, haga clic en el icono que dice <strong>Tarjeta (123)</strong>. Aparecerá un cuadro vacío en su lienzo. Ahora, desde el panel "Datos", marque la casilla de su medida <code>[Ingresos Totales]</code>. Arrastre la tarjeta a la esquina superior izquierda. Repita el proceso creando otras 3 tarjetas independientes para <code>[Total Transacciones]</code>, <code>[Total Unidades]</code> y <code>[Clientes Unicos]</code>. Póngalas en fila arriba.</li>
+                            
+                            <li class="mb-3"><strong>Líneas (Tendencia de Tiempo):</strong> Haga clic en el lienzo en blanco. Luego haga clic en el icono <strong>Gráfico de líneas</strong>. En el panel de visualizaciones, arrastre la columna <code>Mes Nombre</code> (de su tabla Calendario) a la casilla <strong>Eje X</strong>. Arrastre su medida <code>[Ingresos Totales]</code> a la casilla <strong>Eje Y</strong>. Estire el gráfico a lo ancho de la pantalla debajo de las tarjetas.</li>
+                            
+                            <li class="mb-3"><strong>Barras Horizontales (Productos):</strong> Haga clic en el lienzo en blanco. Seleccione <strong>Gráfico de barras agrupadas</strong>. Eje Y: Columna <code>PRODUCTO</code>. Eje X: Medida <code>[Ingresos Totales]</code>. (Se usan barras horizontales porque los nombres como "Teclado Mecánico RGB" son muy largos y de esta forma no se recortan).</li>
+                            
+                            <li class="mb-3"><strong>Anillo (Ciudades):</strong> Seleccione <strong>Gráfico de anillos</strong>. Leyenda: Columna <code>CIUDAD</code>. Valores: Medida <code>[Ingresos Totales]</code>.</li>
+                            
+                            <li class="mb-3"><strong>Segmentadores (Filtros Interactivos):</strong> Seleccione el icono <strong>Segmentación de datos</strong> (tiene un embudo con una tabla). Arrastre la columna <code>Año</code> de la tabla Calendario. <br><em>Formato:</em> Teniendo el filtro seleccionado, vaya al sub-panel <strong>Dar formato a su objeto visual</strong> (el icono del pincel o rodillo) > Configuración de la segmentación > Estilo > <strong>Menú desplegable</strong>. Así ahorraremos muchísimo espacio en pantalla.</li>
+                            
+                            <li><strong>Tooltips (Etiquetas ocultas):</strong> Haga clic sobre su Gráfico de Barras de Productos que ya creó. En el panel de visualizaciones donde están los campos, descienda (haga scroll) hasta ver una sección llamada <strong>Información sobre herramientas (Tooltips)</strong>. Arrastre hacia allí su medida <code>[Total Transacciones]</code>. Ahora, pase su mouse por encima de una barra en el lienzo; aparecerá un recuadro negro flotante mostrando no solo cuánto dinero hizo el producto, sino cuántos tickets de venta generó. Magia pura de storytelling.</li>
+                        </ul>
+                    </div>
+
+                    <h4>Navegación básica</h4>
+                    <p>Haremos que nuestro reporte parezca una App web. <br>
+                    <strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>En la parte inferior izquierda de Power BI, haga clic en el <strong>(+)</strong> verde para crear una "Página 2".</li>
+                        <li>Regrese a la Página 1. En la pestaña <strong>Insertar</strong> de la cinta superior, haga clic en <strong>Botones > En blanco</strong>. Aparecerá un cuadro gris.</li>
+                        <li>Muévalo a una esquina. Vaya al panel Formato > Estilo > Texto, actívelo y escriba "Ver Detalles".</li>
+                        <li>En ese mismo panel de Formato, baje hasta donde dice <strong>Acción</strong> y active el interruptor (On).</li>
+                        <li>Despliegue "Acción", en Tipo seleccione <strong>Navegación de páginas</strong>, y en Destino seleccione <strong>Página 2</strong>. Presione Ctrl + Clic sobre el botón para probar que lo envía a la otra página.</li>
+                    </ol></p>
+
+                    <!-- INICIO DEL SIMULADOR DE DASHBOARD -->
+                    <div class="highlight-box bg-dark text-white border-warning mt-5 mb-0" style="border-radius: 12px 12px 0 0;">
+                        <h4 class="text-warning mb-1"><i class="fas fa-magic"></i> Wireframe Simulado: Diseño Final del Dashboard TechStore</h4>
+                        <p class="mb-0 fs-6" style="color: #bbb;">Visualización maquetada en base al patrón en "Z" y la data real de nuestro CSV, demostrando cómo quedará su lienzo tras seguir los pasos anteriores.</p>
+                    </div>
+
+                    <div class="pbi-canvas" style="border-radius: 0 0 12px 12px;">
+                        <!-- Encabezado del Dashboard -->
+                        <div class="d-flex justify-content-between align-items-center mb-4 pb-2" style="border-bottom: 2px solid #ddd;">
+                            <h3 class="mb-0 text-dark fw-bold" style="font-size: 1.6rem;"><i class="fas fa-microchip text-primary me-2"></i> TechStore: Monitor Comercial</h3>
+                            <div class="d-flex gap-3">
+                                <div>
+                                    <label class="small text-muted fw-bold mb-1 d-block">Segmentadores</label>
+                                    <select class="pbi-slicer"><option>Año: 2025</option><option>2026</option></select>
+                                    <select class="pbi-slicer"><option>Ciudad: Todas</option><option>Punta Cana</option></select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fila 1: KPIs -->
+                        <div class="row g-4 mb-4">
+                            <div class="col-md-3">
+                                <div class="pbi-card border-start border-primary border-5">
+                                    <div class="pbi-kpi-label">Ingresos Totales</div>
+                                    <div class="pbi-kpi-value text-primary">$1.24M</div>
+                                    <div class="text-success mt-2 fw-bold" style="font-size: 0.85rem;"><i class="fas fa-arrow-up"></i> +12.5% vs Año Ant.</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="pbi-card border-start border-success border-5">
+                                    <div class="pbi-kpi-label">Transacciones</div>
+                                    <div class="pbi-kpi-value text-success">500</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="pbi-card border-start border-info border-5">
+                                    <div class="pbi-kpi-label">Volumen (Unidades)</div>
+                                    <div class="pbi-kpi-value text-info">2,345</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="pbi-card border-start border-warning border-5">
+                                    <div class="pbi-kpi-label">Clientes Únicos</div>
+                                    <div class="pbi-kpi-value text-warning" style="color: var(--pbi-yellow-dark) !important;">412</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fila 2: Gráficos -->
+                        <div class="row g-4">
+                            <div class="col-md-12">
+                                <div class="pbi-card">
+                                    <div class="pbi-title">Tendencia de Ingresos Acumulados por Mes</div>
+                                    <div class="d-flex align-items-end justify-content-between px-3 pt-3" style="height: 140px; border-bottom: 2px solid #888; border-left: 2px solid #888;">
+                                        <div style="width: 5%; height: 30%; background-color: #118DFF;"></div><div style="width: 5%; height: 45%; background-color: #118DFF;"></div><div style="width: 5%; height: 60%; background-color: #118DFF;"></div><div style="width: 5%; height: 40%; background-color: #118DFF;"></div><div style="width: 5%; height: 75%; background-color: #118DFF;"></div><div style="width: 5%; height: 90%; background-color: #12239E;"></div><div style="width: 5%; height: 65%; background-color: #118DFF;"></div><div style="width: 5%; height: 80%; background-color: #118DFF;"></div><div style="width: 5%; height: 50%; background-color: #118DFF;"></div><div style="width: 5%; height: 70%; background-color: #118DFF;"></div><div style="width: 5%; height: 85%; background-color: #118DFF;"></div><div style="width: 5%; height: 100%; background-color: #E66C37;"></div>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-2 text-muted fw-bold" style="font-size: 0.8rem; padding-left: 10px;">
+                                        <span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span><span>May</span><span>Jun</span><span>Jul</span><span>Ago</span><span>Sep</span><span>Oct</span><span>Nov</span><span>Dic</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-7">
+                                <div class="pbi-card">
+                                    <div class="pbi-title">Top Productos (Uso de Barras Horizontales)</div>
+                                    <div class="mb-3 mt-3">
+                                        <div class="d-flex justify-content-between fw-bold mb-1" style="font-size: 0.9rem;"><span>Tarjeta Gráfica RTX 4070</span><span>$315,000</span></div>
+                                        <div class="progress" style="height: 18px; border-radius: 2px;"><div class="progress-bar" style="background-color: #118DFF; width: 85%;"></div></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between fw-bold mb-1" style="font-size: 0.9rem;"><span>Laptop Gamer ASUS ROG</span><span>$240,000</span></div>
+                                        <div class="progress" style="height: 18px; border-radius: 2px;"><div class="progress-bar" style="background-color: #118DFF; width: 65%;"></div></div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <div class="d-flex justify-content-between fw-bold mb-1" style="font-size: 0.9rem;"><span>iPhone 15 Pro</span><span>$180,500</span></div>
+                                        <div class="progress" style="height: 18px; border-radius: 2px;"><div class="progress-bar" style="background-color: #118DFF; width: 50%;"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="pbi-card text-center d-flex flex-column align-items-center">
+                                    <div class="pbi-title w-100 text-start">Cuota por Ciudad (Uso de Anillo)</div>
+                                    <div class="pbi-donut mt-4 position-relative">
+                                        <div class="pbi-donut-inner text-center flex-column"><span style="font-size: 1.5rem; color: #118DFF;">40%</span><span style="font-size: 0.7rem; color: #666;">Líder</span></div>
+                                    </div>
+                                    <div class="mt-4 w-100 px-4 text-start fw-bold" style="font-size: 0.9rem;">
+                                        <div class="d-flex justify-content-between mb-2"><span style="color: #333;"><span class="d-inline-block rounded-circle me-2" style="width:12px; height:12px; background-color: #118DFF;"></span> Punta Cana</span> <span>$498K</span></div>
+                                        <div class="d-flex justify-content-between mb-2"><span style="color: #333;"><span class="d-inline-block rounded-circle me-2" style="width:12px; height:12px; background-color: #12239E;"></span> Santiago</span> <span>$311K</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- MÓDULO 6 -->
+                <section id="mod6" class="content-section">
+                    <h2>MÓDULO 6 – Publicación, Uso y Buenas Prácticas</h2>
+                    
+                    <h4>Publicar en Power BI Service y Compartir reportes</h4>
+                    <p>Tras finalizar en Desktop, es hora de dar el salto a la nube para democratizar la toma de decisiones. <br>
+                    <strong>Paso a Paso de publicación:</strong>
+                    <ol>
+                        <li>En Power BI Desktop, haga clic en <strong>Archivo > Guardar como</strong>. Guárdelo como <code>TechStore_V1.pbix</code> en su computadora.</li>
+                        <li>En la pestaña <strong>Inicio</strong>, busque el botón <strong>Publicar</strong> (es el último botón a la derecha). Haga clic.</li>
+                        <li>Si el sistema le pide iniciar sesión, ingrese su correo corporativo de Microsoft/Office 365.</li>
+                        <li>Aparecerá una ventana para elegir el destino. Seleccione <strong>Mi Área de trabajo (My Workspace)</strong> y haga clic en <strong>Seleccionar</strong>.</li>
+                        <li>Espere a que aparezca un mensaje verde de "Operación completada con éxito". Habrá un enlace azul que dice "Abrir TechStore_V1.pbix en Power BI". Haga clic en él para que se abra su navegador web mostrando su reporte en la nube de Microsoft.</li>
+                        <li><em>Compartir:</em> En la parte superior del reporte en la web, verá un botón <strong>Compartir</strong>. Puede generar un vínculo (enlace) o escribir los correos de sus compañeros. (Nota: Esto requiere que usted y quien recibe el link tengan una licencia de Power BI Pro).</li>
+                    </ol></p>
+
+                    <h4>Uso de filtros en línea</h4>
+                    <p>Los consumidores (jefes o compañeros) que abran el reporte en la web no pueden "romper" ni borrar sus gráficos. Pueden interactuar de forma segura con los Segmentadores (Slicers) que usted dejó. En la parte superior de la interfaz web, encontrarán un botón llamado <strong>Marcadores personales</strong> donde pueden guardar su vista, logrando que cada mañana el reporte abra filtrado exactamente en los datos de su ciudad, sin afectar a los demás usuarios.</p>
+
+                    <h4>Actualización manual</h4>
+                    <p>Si la semana que viene la tienda TechStore le envía un nuevo CSV actualizado, haga lo siguiente:<br>
+                    <strong>Paso a Paso:</strong>
+                    <ol>
+                        <li>Guarde el nuevo archivo <code>ventas_tecnologia_500_registros.csv</code> exactamente en la misma ruta o carpeta de su PC, <strong>reemplazando</strong> (sobrescribiendo) el archivo viejo.</li>
+                        <li>Abra su archivo <code>TechStore_V1.pbix</code> en Power BI Desktop.</li>
+                        <li>En la pestaña <strong>Inicio</strong>, haga clic en el botón <strong>Actualizar</strong>. Toda la limpieza de Power Query y las medidas DAX se ejecutarán solas en segundos sobre los nuevos datos.</li>
+                        <li>Vuelva a presionar el botón <strong>Publicar</strong>, y seleccione "Reemplazar" cuando le pregunte si desea sobrescribir el reporte en la nube. Todo su equipo verá los datos frescos al instante.</li>
+                    </ol></p>
+
+                    <h4>Buenas prácticas de rendimiento (básicas)</h4>
+                    <ul>
+                        <li><strong>Reducir granularidad:</strong> La acción que hicimos de separar Fechas de Horas reduce dramáticamente la carga de la memoria RAM.</li>
+                        <li><strong>Borrado sin piedad:</strong> Elimine en Power Query cualquier columna que el negocio no vaya a utilizar para análisis. Menos columnas = Modelo exponencialmente más rápido.</li>
+                    </ul>
+
+                    <h4 class="mt-5 text-danger"><i class="fas fa-exclamation-triangle"></i> Errores comunes en Power BI</h4>
+                    <div class="card border-danger bg-light">
+                        <div class="card-body fs-5 text-danger">
+                            <ul class="mb-0">
+                                <li class="mb-2"><strong>Falta de Tabla Calendario:</strong> Usar la "fecha automática" (Auto Date/Time) de Power BI engorda el modelo ocultando decenas de tablas temporales internamente por cada columna tipo fecha que usted tenga. Siempre apáguela en las opciones y use una tabla Calendario DAX.</li>
+                                <li class="mb-2"><strong>Relaciones Bidireccionales:</strong> Dejar que las flechas de las relaciones apunten a ambos lados en la Vista Modelo (Flecha <->). Esto genera ciclos de ambigüedad matemática y destruye la integridad de los filtros DAX. La flecha siempre debe ser unidireccional (Dimensión -> Hecho).</li>
+                                <li><strong>Sobrecarga Visual:</strong> Llenar una pantalla con 15 gráficos y tablas. Esto genera parálisis por análisis y lentitud de carga extrema. Respete el minimalismo y utilice Tooltips para datos accesorios.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- ==================== BOTÓN GENERADOR ==================== -->
+                <div class="text-center my-5 py-5 bg-light rounded-4 border border-warning shadow">
+                    <h3 class="mb-4 text-dark"><i class="fas fa-database text-primary"></i> Tarea para todos -Generador de Datos para Práctica</h3>
+                    <p class="lead mb-4">Genera datasets con errores reales para seguir practicando Power Query y ETL</p>
+                    
+                    <a href="datos.html" target="_blank" class="btn btn-warning btn-generador text-dark">
+                        <i class="fas fa-magic me-3"></i>
+                        ABRIR GENERADOR DE DATASET ETL
+                    </a>
+                    <p class="text-muted mt-3">El archivo <strong>datos.html</strong> debe estar en la misma carpeta</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-dark text-white text-center py-5 mt-5 border-top border-4 border-warning">
+        <div class="container">
+            <h3 class="text-warning fw-bold"><i class="fas fa-chart-bar me-2"></i> Diplomado de Alto Nivel: Power BI</h3>
+            <p class="mb-0 fs-5 text-light mt-3">Diseñado estrictamente acorde al Temario Oficial. Integrando Storytelling, Datos Reales y Guías Paso a Paso.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts: Bootstrap & Prism.js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+
+    <!-- Funcionalidad para botón "Copiar" en códigos DAX -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('pre').forEach((block) => {
+                block.style.position = 'relative';
+                const button = document.createElement('button');
+                button.innerHTML = '<i class="far fa-copy"></i> Copiar Código';
+                button.className = 'btn btn-sm text-white position-absolute top-0 end-0 m-3';
+                button.style.backgroundColor = 'rgba(255,255,255,0.15)';
+                button.style.border = '1px solid rgba(255,255,255,0.3)';
+                button.style.backdropFilter = 'blur(5px)';
+                button.style.transition = 'all 0.3s';
+                
+                button.onmouseover = () => { button.style.backgroundColor = 'rgba(255,255,255,0.3)'; }
+                button.onmouseout = () => { button.style.backgroundColor = 'rgba(255,255,255,0.15)'; }
+                
+                button.addEventListener('click', async () => {
+                    const code = block.querySelector('code').innerText;
+                    try {
+                        await navigator.clipboard.writeText(code);
+                        button.innerHTML = '<i class="fas fa-check text-success"></i> Copiado Exitósamente';
+                        button.style.backgroundColor = 'rgba(255,255,255,0.9)';
+                        button.style.color = '#333';
+                        setTimeout(() => { 
+                            button.innerHTML = '<i class="far fa-copy"></i> Copiar Código'; 
+                            button.style.backgroundColor = 'rgba(255,255,255,0.15)';
+                            button.style.color = 'white';
+                        }, 2500);
+                    } catch (err) { console.error('Error al copiar', err); }
+                });
+                block.appendChild(button);
+            });
+        });
+    </script>
+</body>
+</html>
