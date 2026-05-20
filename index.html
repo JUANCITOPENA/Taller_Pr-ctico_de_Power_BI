@@ -11,6 +11,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Prism.js (Tema oscuro para código DAX) -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    
+    <!-- Librerías para Exportación de Datos (Excel y PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
     <style>
         /* ================= VARIABLES CORPORATIVAS ================= */
@@ -48,7 +53,7 @@
         .warning-box { background-color: #fffcf0; border-left: 6px solid var(--pbi-yellow); padding: 25px; border-radius: 0 12px 12px 0; margin: 30px 0; }
 
         /* ================= TABLA Y CÓDIGO ================= */
-        .table-wrapper { max-height: 400px; overflow-y: auto; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #eee; }
+        .table-wrapper { border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border: 1px solid #eee; overflow-x: auto;}
         .table th { background-color: var(--pbi-dark); color: white; position: sticky; top: 0; z-index: 1; font-weight: 500; letter-spacing: 1px;}
         .table td { font-size: 0.95rem; vertical-align: middle; }
         pre { border-radius: 12px !important; font-size: 1.05rem !important; margin: 25px 0 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
@@ -63,6 +68,14 @@
         .pbi-donut { width: 180px; height: 180px; border-radius: 50%; background: conic-gradient(#118DFF 0% 40%, #12239E 40% 65%, #E66C37 65% 85%, #00B8AA 85% 100%); display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .pbi-donut-inner { width: 110px; height: 110px; background-color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #333; }
         .pbi-slicer { background-color: white; border: 1px solid #ccc; padding: 8px 15px; border-radius: 5px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+
+        /* ================= ESTILOS DEL GENERADOR ================= */
+        .generator-panel { background-color: #f8faff; border: 1px solid #cce5ff; border-radius: 12px; padding: 25px; margin-bottom: 30px; }
+        .export-btn { border-radius: 50px; font-weight: 600; font-size: 0.95rem; transition: transform 0.2s; padding: 10px 20px;}
+        .export-btn:hover { transform: scale(1.05); }
+        .pagination { justify-content: center; margin-top: 20px; }
+        .page-link { color: var(--accent-blue); font-weight: bold; cursor: pointer; }
+        .page-item.active .page-link { background-color: var(--accent-blue); border-color: var(--accent-blue); }
     </style>
 </head>
 <body data-bs-spy="scroll" data-bs-target="#menu-lateral" data-bs-offset="120" tabindex="0">
@@ -73,7 +86,7 @@
             <!-- Contenido Original -->
             <div class="row align-items-center">
                 <div class="col-lg-8 text-center text-lg-start">
-                    <h1 class="text-white"><i class="fas fa-chart-line text-warning me-3"></i>Taller Práctico de Power BI Para Practica # 2</h1>
+                    <h1 class="text-white"><i class="fas fa-chart-line text-warning me-3"></i>Taller Práctico de Power BI Para Práctica # 2</h1>
                     <p class="lead fs-3 mt-3 text-light" style="font-weight: 300;">Manual del Diplomado: De la extracción de datos crudos al Storytelling Corporativo.</p>
                     <div class="mt-4">
                         <span class="badge bg-light text-dark fs-5 py-2 px-3 me-2"><i class="fas fa-clock text-primary"></i> Duración: 18 Horas</span>
@@ -165,58 +178,98 @@
                 <!-- SET DE DATOS (Sección Preparatoria Práctica) -->
                 <section id="datos" class="content-section border border-primary border-2">
                     <h2 class="mb-4"><i class="fas fa-laptop-code text-primary"></i> Preparación: Set de Datos de Trabajo</h2>
-                    <p>La teoría sin práctica es estéril. En este diplomado aplicaremos todo el temario ensuciándonos las manos con datos reales. Utilizaremos el archivo <code>ventas_tecnologia_500_registros.csv</code>, el cual simula la facturación de la empresa <strong>TechStore</strong>.</p>
+                    <p>La teoría sin práctica es estéril. En este diplomado aplicaremos todo el temario ensuciándonos las manos con datos reales. Utilizaremos el archivo de ventas el cual simula la facturación de la empresa <strong>TechStore</strong>.</p>
                     
                     <div class="warning-box">
-                        <h5 class="fw-bold"><i class="fas fa-bug text-danger"></i> Diagnóstico de la Data (Errores de la vida real):</h5>
+                        <h5 class="fw-bold"><i class="fas fa-bug text-danger"></i> Diagnóstico de la Data (Errores de la vida real inyectados):</h5>
                         <ul class="mb-0">
-                            <li><strong>Inconsistencia de Textos:</strong> La columna CLIENTE tiene nombres como <em>"LUIS GARCIA"</em> y <em>"rafael CRUZ"</em> mezclados.</li>
-                            <li><strong>Anomalía de Tiempo:</strong> FECHA_HORA tiene valores como <em>5/8/2025 4:32</em>. Esto requerirá limpieza obligatoria.</li>
-                            <li><strong>Cálculos faltantes:</strong> Solo tenemos CANTIDAD y PRECIO_USD. Falta el total.</li>
+                            <li><strong>Inconsistencia de Textos:</strong> Las columnas CLIENTE y VENDEDOR tienen nombres como <em>"LUIS GARCIA"</em>, <em>"rAfaEl crUz"</em> o <em>"laura pimentel"</em> mezclados.</li>
+                            <li><strong>Anomalía de Tiempo:</strong> FECHA_HORA tiene un formato mixto de texto con fechas y horas (Ej. <em>5/8/2025 4:32</em>). Esto requerirá limpieza obligatoria en Power Query.</li>
+                            <li><strong>Cálculos faltantes:</strong> Solo tenemos CANTIDAD y PRECIO. Falta el Total de la transacción.</li>
                         </ul>
                     </div>
 
-                    <!-- Botón Descarga -->
-                    <div class="text-center my-4">
-                        <a href="ventas_tecnologia_500_registros.csv" download="ventas_tecnologia_500_registros.csv" class="btn btn-success btn-lg px-5 py-3 shadow" style="border-radius: 50px; font-weight: bold;">
-                            <i class="fas fa-download fa-lg me-2"></i> Descargar CSV de Trabajo (500 Filas)
-                        </a>
-                        <p class="text-muted mt-2 small">Guarde este archivo en una carpeta fácilmente accesible, como "Escritorio/Diplomado_PBI".</p>
+                    <!-- NUEVO GENERADOR DE DATOS -->
+                    <div class="generator-panel shadow-sm">
+                        <h4 class="mb-4 text-primary"><i class="fas fa-cogs me-2"></i> Parámetros de Generación de Archivo</h4>
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Fecha Inicial</label>
+                                <input type="date" id="genStartDate" class="form-control" value="2025-01-01">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Fecha Final</label>
+                                <input type="date" id="genEndDate" class="form-control" value="2026-12-31">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold small">Cant. de Registros</label>
+                                <input type="number" id="genNumRecords" class="form-control" value="500" min="10" max="50000">
+                            </div>
+                            <div class="col-md-3">
+                                <button id="btnGenerate" class="btn btn-primary w-100 fw-bold">
+                                    <i class="fas fa-magic me-2"></i> Generar Datos
+                                </button>
+                            </div>
+                        </div>
+
+                        <hr class="my-4 text-muted">
+
+                        <h5 class="mb-3 text-dark fw-bold">Exportar Generación en Múltiples Formatos</h5>
+                        <div class="d-flex flex-wrap gap-2 justify-content-center">
+                            <button onclick="exportarExcel()" class="btn btn-success export-btn">
+                                <i class="fas fa-file-excel me-2"></i> Excel (.xlsx)
+                            </button>
+                            <button onclick="exportarCSV()" class="btn btn-info text-white export-btn" style="background-color: #17a2b8;">
+                                <i class="fas fa-file-csv me-2"></i> CSV (.csv)
+                            </button>
+                            <button onclick="exportarJSON()" class="btn btn-warning text-dark export-btn">
+                                <i class="fas fa-file-code me-2"></i> JSON (.json)
+                            </button>
+                            <button onclick="exportarXML()" class="btn btn-secondary export-btn" style="background-color: #e67e22; border-color: #e67e22;">
+                                <i class="fas fa-file-alt me-2"></i> XML (.xml)
+                            </button>
+                            <button onclick="exportarTXT()" class="btn btn-dark export-btn">
+                                <i class="fas fa-file-signature me-2"></i> TXT (.txt)
+                            </button>
+                            <button onclick="exportarPDF()" class="btn btn-danger export-btn">
+                                <i class="fas fa-file-pdf me-2"></i> PDF (.pdf)
+                            </button>
+                        </div>
                     </div>
 
-                    <h5 class="fw-bold mb-3">Previsualización (Muestra: Registros 1 al 15)</h5>
-                    <div class="table-wrapper">
-                        <table class="table table-hover table-striped">
+                    <h5 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                        <span>Previsualización Dinámica de los Datos</span>
+                        <span id="recordCountBadge" class="badge bg-primary fs-6">0 Registros</span>
+                    </h5>
+                    
+                    <div class="table-responsive table-wrapper">
+                        <table class="table table-hover table-striped mb-0" id="mainDataTable">
                             <thead>
                                 <tr>
                                     <th>ID</th>
+                                    <th class="text-warning">FECHA_HORA</th>
+                                    <th>VENDEDOR</th>
                                     <th>CLIENTE</th>
                                     <th>PRODUCTO</th>
+                                    <th>CATEGORÍA</th>
+                                    <th>CIUDAD</th>
                                     <th>CANT.</th>
                                     <th>PRECIO</th>
-                                    <th>CIUDAD</th>
-                                    <th class="text-warning">FECHA_HORA</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr><td>1</td><td>LUIS GARCIA</td><td>Mouse Inalámbrico</td><td>4</td><td>180</td><td>San Pedro</td><td>5/8/2025 4:32</td></tr>
-                                <tr><td>2</td><td>Carlos FERNANDEZ</td><td>Teclado Mecánico RGB</td><td>5</td><td>1200</td><td>Baní</td><td>12/17/2025 23:54</td></tr>
-                                <tr><td>3</td><td>Luisa GOMEZ</td><td>Teclado Mecánico RGB</td><td>8</td><td>250</td><td>Punta Cana</td><td>1/5/2026 20:55</td></tr>
-                                <tr><td>4</td><td>David HERNANDEZ</td><td>SSD NVMe 1TB</td><td>6</td><td>1200</td><td>San Pedro</td><td>3/19/2025 15:45</td></tr>
-                                <tr><td>5</td><td>Marta GARCIA</td><td>Tarjeta Gráfica RTX 4070</td><td>6</td><td>75</td><td>Baní</td><td>12/13/2025 2:59</td></tr>
-                                <tr><td>6</td><td>Sara MARTINEZ</td><td>Laptop Lenovo ThinkPad</td><td>7</td><td>50</td><td>Puerto Plata</td><td>10/13/2025 0:15</td></tr>
-                                <tr><td>7</td><td>María PEREZ</td><td>SSD NVMe 1TB</td><td>6</td><td>3000</td><td>Santiago</td><td>8/25/2025 17:42</td></tr>
-                                <tr><td>8</td><td>rafael CRUZ</td><td>SSD NVMe 1TB</td><td>8</td><td>50</td><td>Bávaro</td><td>3/8/2025 7:22</td></tr>
-                                <tr><td>9</td><td>Elena VARGAS</td><td>Refrigeración Líquida</td><td>3</td><td>1800</td><td>San Cristóbal</td><td>4/19/2026 6:03</td></tr>
-                                <tr><td>10</td><td>José FERNANDEZ</td><td>Fuente de Poder 850W</td><td>3</td><td>50</td><td>Santiago</td><td>1/12/2025 5:50</td></tr>
-                                <tr><td>11</td><td>Sara MARTINEZ</td><td>Fuente de Poder 850W</td><td>7</td><td>75</td><td>Punta Cana</td><td>11/20/2025 2:56</td></tr>
-                                <tr><td>12</td><td>Carlos LOPEZ</td><td>Webcam Full HD</td><td>1</td><td>1200</td><td>Bávaro</td><td>3/11/2025 17:51</td></tr>
-                                <tr><td>13</td><td>LUIS GARCIA</td><td>SSD NVMe 1TB</td><td>1</td><td>250</td><td>Moca</td><td>5/12/2025 18:37</td></tr>
-                                <tr><td>14</td><td>LUIS GARCIA</td><td>Laptop HP Pavilion</td><td>3</td><td>900</td><td>Moca</td><td>4/18/2026 1:54</td></tr>
-                                <tr><td>15</td><td>Carlos LOPEZ</td><td>Gabinete Gamer RGB</td><td>3</td><td>1500</td><td>Santiago</td><td>2/19/2025 4:03</td></tr>
+                            <tbody id="dataTableBody">
+                                <!-- Los datos se inyectarán aquí mediante JS -->
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Controles de Paginación -->
+                    <nav aria-label="Navegación de tabla">
+                        <ul class="pagination" id="paginationControls">
+                            <!-- JS Paginación -->
+                        </ul>
+                    </nav>
+
                 </section>
 
                 <div class="text-center my-5 py-3"><h1 class="text-uppercase fw-bold" style="color: #ccc; letter-spacing: 5px;">Desarrollo del Temario</h1></div>
@@ -254,11 +307,11 @@
                     <p>Utilizaremos la conexión <strong>IMPORT MODE</strong>. Esto significa que Power BI creará una copia altamente comprimida del archivo CSV dentro de su propio motor en memoria (VertiPaq). Garantiza velocidad extrema al hacer clic en los gráficos y permite el uso de todas las funciones DAX.</p>
                     
                     <div class="highlight-box">
-                        <strong>Paso a Paso - Importación del CSV:</strong>
+                        <strong>Paso a Paso - Importación del Archivo:</strong>
                         <ol class="mb-0 mt-2">
                             <li>En la cinta de opciones superior de Power BI Desktop (Pestaña <strong>Inicio</strong>), haga clic en <strong>Obtener Datos</strong>.</li>
-                            <li>Seleccione la opción <strong>Texto/CSV</strong> en la lista desplegable.</li>
-                            <li>Navegue por sus carpetas y seleccione el archivo <code>ventas_tecnologia_500_registros.csv</code> que descargó previamente. Haga clic en <strong>Abrir</strong>.</li>
+                            <li>Seleccione la opción correspondiente a su descarga (ej. <strong>Texto/CSV</strong> o <strong>Excel</strong>) en la lista desplegable.</li>
+                            <li>Navegue por sus carpetas y seleccione el archivo generado. Haga clic en <strong>Abrir</strong>.</li>
                             <li>Aparecerá una ventana de previsualización amarilla. <strong>¡Regla de oro!</strong> Nunca haga clic en "Cargar". Haga clic siempre en el botón <strong>Transformar datos</strong>. Esto abrirá automáticamente el editor de Power Query.</li>
                         </ol>
                     </div>
@@ -270,17 +323,17 @@
                     <p>Power Query automatiza la extracción, transformación y carga (ETL). Es "La Cocina" de los datos. Toda la limpieza que hagamos quedará grabada como pasos automatizados.</p>
                     
                     <h4>Limpieza de datos</h4>
-                    <p><strong>El problema:</strong> La columna <code>CLIENTE</code> de nuestro CSV tiene inconsistencias como <em>"LUIS GARCIA"</em> y <em>"rafael CRUZ"</em>. <br>
+                    <p><strong>El problema:</strong> Las columnas <code>CLIENTE</code> y <code>VENDEDOR</code> de nuestro archivo tienen inconsistencias como <em>"LUIS GARCIA"</em> y <em>"rafael CRUZ"</em>. <br>
                     <strong>Paso a Paso de Solución:</strong>
                     <ol>
-                        <li>En la ventana de Power Query, haga un clic izquierdo sobre el título de la columna <code>CLIENTE</code> para seleccionarla.</li>
+                        <li>En la ventana de Power Query, haga un clic izquierdo sobre el título de la columna <code>CLIENTE</code> para seleccionarla (puede seleccionar VENDEDOR con Ctrl+Clic también).</li>
                         <li>En la cinta superior, vaya a la pestaña <strong>Transformar</strong>.</li>
                         <li>Busque el botón <strong>Formato</strong> (tiene un icono con una letra 'A' grande y una 'a' pequeña) y haga clic.</li>
                         <li>Seleccione <strong>Poner en mayúscula cada palabra</strong>. Verá cómo "rafael CRUZ" cambia instantáneamente a "Rafael Cruz", y a su derecha en el panel "Pasos Aplicados" aparecerá un nuevo registro de esta acción.</li>
                     </ol></p>
 
                     <h4>Cambiar tipos de datos</h4>
-                    <p><strong>Anomalía temporal:</strong> La columna <code>FECHA_HORA</code> tiene valores como <em>5/8/2025 4:32</em>. Un motor analítico sufre con esta granularidad.
+                    <p><strong>Anomalía temporal:</strong> La columna <code>FECHA_HORA</code> tiene valores mixtos de texto como <em>5/8/2025 4:32</em>. Un motor analítico sufre con esta granularidad.
                     <br><strong>Paso a Paso:</strong>
                     <ol>
                         <li>Seleccione la columna <code>FECHA_HORA</code> haciendo clic en su título.</li>
@@ -301,7 +354,7 @@
                         <li>En la cinta superior, vaya a la pestaña <strong>Agregar columna</strong>.</li>
                         <li>Haga clic en el botón <strong>Columna personalizada</strong>.</li>
                         <li>En la ventana emergente, en la casilla "Nuevo nombre de columna", borre el texto y escriba: <code>Subtotal_Venta</code>.</li>
-                        <li>En el cuadro grande de "Fórmula de columna de cliente", escriba exactamente esto: <code>= [CANTIDAD] * [PRECIO_USD]</code> (Puede ayudar hacer doble clic en los campos de la lista de la derecha para no equivocarse al escribir).</li>
+                        <li>En el cuadro grande de "Fórmula de columna", escriba exactamente esto: <code>= [CANTIDAD] * [PRECIO]</code> (Puede ayudar hacer doble clic en los campos de la lista de la derecha para no equivocarse al escribir).</li>
                         <li>Haga clic en <strong>Aceptar</strong>.</li>
                         <li>Cambie el tipo de dato de su nueva columna: Clic en el icono ABC/123 y seleccione <strong>Número Decimal Fijo</strong> (este es el formato de moneda en Power BI).</li>
                     </ol></p>
@@ -477,7 +530,7 @@ DIVIDE(
                     <!-- INICIO DEL SIMULADOR DE DASHBOARD -->
                     <div class="highlight-box bg-dark text-white border-warning mt-5 mb-0" style="border-radius: 12px 12px 0 0;">
                         <h4 class="text-warning mb-1"><i class="fas fa-magic"></i> Wireframe Simulado: Diseño Final del Dashboard TechStore</h4>
-                        <p class="mb-0 fs-6" style="color: #bbb;">Visualización maquetada en base al patrón en "Z" y la data real de nuestro CSV, demostrando cómo quedará su lienzo tras seguir los pasos anteriores.</p>
+                        <p class="mb-0 fs-6" style="color: #bbb;">Visualización maquetada en base al patrón en "Z" y la data real generada, demostrando cómo quedará su lienzo tras seguir los pasos anteriores.</p>
                     </div>
 
                     <div class="pbi-canvas" style="border-radius: 0 0 12px 12px;">
@@ -556,11 +609,16 @@ DIVIDE(
                                 <div class="pbi-card text-center d-flex flex-column align-items-center">
                                     <div class="pbi-title w-100 text-start">Cuota por Ciudad (Uso de Anillo)</div>
                                     <div class="pbi-donut mt-4 position-relative">
-                                        <div class="pbi-donut-inner text-center flex-column"><span style="font-size: 1.5rem; color: #118DFF;">40%</span><span style="font-size: 0.7rem; color: #666;">Líder</span></div>
+                                        <div class="pbi-donut-inner text-center flex-column">
+                                            <span style="font-size: 1.5rem; color: #118DFF;">40%</span>
+                                            <span style="font-size: 0.7rem; color: #666;">Líder</span>
+                                        </div>
                                     </div>
                                     <div class="mt-4 w-100 px-4 text-start fw-bold" style="font-size: 0.9rem;">
-                                        <div class="d-flex justify-content-between mb-2"><span style="color: #333;"><span class="d-inline-block rounded-circle me-2" style="width:12px; height:12px; background-color: #118DFF;"></span> Punta Cana</span> <span>$498K</span></div>
-                                        <div class="d-flex justify-content-between mb-2"><span style="color: #333;"><span class="d-inline-block rounded-circle me-2" style="width:12px; height:12px; background-color: #12239E;"></span> Santiago</span> <span>$311K</span></div>
+                                        <div class="d-flex justify-content-between mb-2">
+                                            <span style="color: #333;"><span class="d-inline-block rounded-circle me-2" style="width:12px; height:12px; background-color: #118DFF;"></span> Punta Cana</span>
+                                            <span>311K</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -588,10 +646,10 @@ DIVIDE(
                     <p>Los consumidores (jefes o compañeros) que abran el reporte en la web no pueden "romper" ni borrar sus gráficos. Pueden interactuar de forma segura con los Segmentadores (Slicers) que usted dejó. En la parte superior de la interfaz web, encontrarán un botón llamado <strong>Marcadores personales</strong> donde pueden guardar su vista, logrando que cada mañana el reporte abra filtrado exactamente en los datos de su ciudad, sin afectar a los demás usuarios.</p>
 
                     <h4>Actualización manual</h4>
-                    <p>Si la semana que viene la tienda TechStore le envía un nuevo CSV actualizado, haga lo siguiente:<br>
+                    <p>Si la semana que viene la tienda TechStore le envía un nuevo archivo actualizado, haga lo siguiente:<br>
                     <strong>Paso a Paso:</strong>
                     <ol>
-                        <li>Guarde el nuevo archivo <code>ventas_tecnologia_500_registros.csv</code> exactamente en la misma ruta o carpeta de su PC, <strong>reemplazando</strong> (sobrescribiendo) el archivo viejo.</li>
+                        <li>Guarde el nuevo archivo exactamente en la misma ruta o carpeta de su PC, <strong>reemplazando</strong> (sobrescribiendo) el archivo viejo con el mismo nombre y extensión.</li>
                         <li>Abra su archivo <code>TechStore_V1.pbix</code> en Power BI Desktop.</li>
                         <li>En la pestaña <strong>Inicio</strong>, haga clic en el botón <strong>Actualizar</strong>. Toda la limpieza de Power Query y las medidas DAX se ejecutarán solas en segundos sobre los nuevos datos.</li>
                         <li>Vuelva a presionar el botón <strong>Publicar</strong>, y seleccione "Reemplazar" cuando le pregunte si desea sobrescribir el reporte en la nube. Todo su equipo verá los datos frescos al instante.</li>
@@ -615,7 +673,8 @@ DIVIDE(
                     </div>
                 </section>
 
-                <!-- ==================== BOTÓN GENERADOR ==================== -->
+
+  <!-- ==================== BOTÓN GENERADOR ==================== -->
                 <div class="text-center my-5 py-5 bg-light rounded-4 border border-warning shadow">
                     <h3 class="mb-4 text-dark"><i class="fas fa-database text-primary"></i> Tarea para todos -Generador de Datos para Práctica</h3>
                     <p class="lead mb-4">Genera datasets con errores reales para seguir practicando Power Query y ETL</p>
@@ -626,6 +685,7 @@ DIVIDE(
                     </a>
                     <p class="text-muted mt-3">El archivo <strong>datos.html</strong> debe estar en la misma carpeta</p>
                 </div>
+
 
             </div>
         </div>
@@ -664,7 +724,7 @@ DIVIDE(
                     const code = block.querySelector('code').innerText;
                     try {
                         await navigator.clipboard.writeText(code);
-                        button.innerHTML = '<i class="fas fa-check text-success"></i> Copiado Exitósamente';
+                        button.innerHTML = '<i class="fas fa-check text-success"></i> Copiado Exitosamente';
                         button.style.backgroundColor = 'rgba(255,255,255,0.9)';
                         button.style.color = '#333';
                         setTimeout(() => { 
@@ -672,7 +732,10 @@ DIVIDE(
                             button.style.backgroundColor = 'rgba(255,255,255,0.15)';
                             button.style.color = 'white';
                         }, 2500);
-                    } catch (err) { console.error('Error al copiar', err); }
+                    } catch (err) { 
+                        console.error('Error al copiar', err); 
+                        button.innerHTML = '<i class="fas fa-times text-danger"></i> Error';
+                    }
                 });
                 block.appendChild(button);
             });
@@ -688,24 +751,257 @@ DIVIDE(
             const ahora = new Date().getTime();
             const distancia = fechaDestino - ahora;
 
-            // Cálculos para días, horas, minutos y segundos
+            if (distancia < 0) {
+                clearInterval(contadorIntervalo);
+                document.getElementById("countdown-timer").innerHTML = "<div class='text-danger fs-3'>¡El periodo de acceso ha finalizado!</div>";
+                return;
+            }
+
             const dias = Math.floor(distancia / (1000 * 60 * 60 * 24));
             const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
             const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
 
-            // Mostrar el resultado en los elementos correspondientes (con ceros a la izquierda)
             document.getElementById("dias").innerText = dias.toString().padStart(2, '0');
             document.getElementById("horas").innerText = horas.toString().padStart(2, '0');
             document.getElementById("minutos").innerText = minutos.toString().padStart(2, '0');
             document.getElementById("segundos").innerText = segundos.toString().padStart(2, '0');
-
-            // Si la cuenta regresiva termina, mostrar mensaje
-            if (distancia < 0) {
-                clearInterval(contadorIntervalo);
-                document.getElementById("countdown-timer").innerHTML = "<div class='text-danger fs-3'>¡El periodo de acceso ha finalizado!</div>";
-            }
         }, 1000);
+    </script>
+
+    <!-- ================= SCRIPT DEL GENERADOR DE DATOS ================= -->
+    <script>
+        let globalData = [];
+        let currentPage = 1;
+        const rowsPerPage = 10;
+
+        // Base de datos ficticia
+        const vendedores = ["Jorge Medina", "María López", "Pedro Reyes", "Laura Pimentel", "Carlos Santos"];
+        const clientes = ["Luis Garcia", "Carlos Fernandez", "Luisa Gomez", "David Hernandez", "Marta Garcia", "Sara Martinez", "Maria Perez", "Rafael Cruz", "Elena Vargas", "Jose Fernandez", "Carlos Lopez"];
+        const ciudades = ["San Pedro", "Baní", "Punta Cana", "Santiago", "Puerto Plata", "Bávaro", "San Cristóbal", "Moca"];
+        
+        const catalogo = [
+            { producto: "Mouse Inalámbrico", categoria: "Periféricos", precio: 180 },
+            { producto: "Teclado Mecánico RGB", categoria: "Periféricos", precio: 1200 },
+            { producto: "SSD NVMe 1TB", categoria: "Almacenamiento", precio: 3000 },
+            { producto: "Tarjeta Gráfica RTX 4070", categoria: "Componentes", precio: 315000 }, // Precio realístico dominicano
+            { producto: "Laptop Lenovo ThinkPad", categoria: "Computadoras", precio: 55000 },
+            { producto: "Refrigeración Líquida", categoria: "Componentes", precio: 4500 },
+            { producto: "Fuente de Poder 850W", categoria: "Componentes", precio: 6500 },
+            { producto: "Webcam Full HD", categoria: "Accesorios", precio: 2200 },
+            { producto: "Laptop HP Pavilion", categoria: "Computadoras", precio: 45000 },
+            { producto: "Gabinete Gamer RGB", categoria: "Componentes", precio: 3500 },
+            { producto: "Monitor IPS 27 Pulgadas", categoria: "Periféricos", precio: 12500 }
+        ];
+
+        // Función para inyectar anomalías (mayúsculas/minúsculas mixtas para obligar a usar Power Query)
+        function injectAnomaly(text) {
+            const rand = Math.random();
+            if (rand < 0.15) return text.toLowerCase(); // 15% todo minúscula (ej. laura pimentel)
+            if (rand < 0.30) return text.toUpperCase(); // 15% todo mayúscula (ej. LUIS GARCIA)
+            if (rand < 0.40) { // 10% locura mixta (ej. rAfaEl crUz)
+                return text.split('').map(c => Math.random() < 0.5 ? c.toUpperCase() : c.toLowerCase()).join('');
+            }
+            return text; // 60% correcto
+        }
+
+        function generateRandomDate(start, end) {
+            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = date.getFullYear();
+            const hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${month}/${day}/${year} ${hours}:${minutes}`; // Formato que causa problemas en PBI (M/D/YYYY H:mm)
+        }
+
+        function generarDatos() {
+            const startDate = new Date(document.getElementById('genStartDate').value);
+            const endDate = new Date(document.getElementById('genEndDate').value);
+            const numRecordsInput = document.getElementById('genNumRecords').value;
+            const numRecords = parseInt(numRecordsInput) > 0 ? parseInt(numRecordsInput) : 500;
+            
+            globalData = [];
+            
+            for (let i = 1; i <= numRecords; i++) {
+                const itemCatalogo = catalogo[Math.floor(Math.random() * catalogo.length)];
+                
+                globalData.push({
+                    "ID": i,
+                    "FECHA_HORA": generateRandomDate(startDate, endDate),
+                    "VENDEDOR": injectAnomaly(vendedores[Math.floor(Math.random() * vendedores.length)]),
+                    "CLIENTE": injectAnomaly(clientes[Math.floor(Math.random() * clientes.length)]),
+                    "PRODUCTO": itemCatalogo.producto,
+                    "CATEGORIA": itemCatalogo.categoria, // Sin tilde en la llave para evitar bugs en exportación
+                    "CIUDAD": ciudades[Math.floor(Math.random() * ciudades.length)],
+                    "CANTIDAD": Math.floor(Math.random() * 8) + 1,
+                    "PRECIO": itemCatalogo.precio
+                });
+            }
+
+            document.getElementById('recordCountBadge').innerText = `${numRecords} Registros`;
+            currentPage = 1;
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+            
+            const startIdx = (currentPage - 1) * rowsPerPage;
+            const endIdx = startIdx + rowsPerPage;
+            const paginatedData = globalData.slice(startIdx, endIdx);
+
+            paginatedData.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.ID}</td>
+                    <td class="text-warning fw-bold">${row.FECHA_HORA}</td>
+                    <td>${row.VENDEDOR}</td>
+                    <td>${row.CLIENTE}</td>
+                    <td>${row.PRODUCTO}</td>
+                    <td>${row.CATEGORIA}</td>
+                    <td>${row.CIUDAD}</td>
+                    <td>${row.CANTIDAD}</td>
+                    <td>$${row.PRECIO.toLocaleString('en-US')}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(globalData.length / rowsPerPage);
+            const paginationUl = document.getElementById('paginationControls');
+            paginationUl.innerHTML = '';
+
+            // Lógica simple para no mostrar miles de botones
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, currentPage + 2);
+
+            // Botón Anterior
+            paginationUl.innerHTML += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <a class="page-link" onclick="changePage(${currentPage - 1})">Anterior</a></li>`;
+
+            if (startPage > 1) paginationUl.innerHTML += `<li class="page-item"><a class="page-link" onclick="changePage(1)">1</a></li><li class="page-item disabled"><span class="page-link">...</span></li>`;
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationUl.innerHTML += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+                    <a class="page-link" onclick="changePage(${i})">${i}</a></li>`;
+            }
+
+            if (endPage < totalPages) paginationUl.innerHTML += `<li class="page-item disabled"><span class="page-link">...</span></li><li class="page-item"><a class="page-link" onclick="changePage(${totalPages})">${totalPages}</a></li>`;
+
+            // Botón Siguiente
+            paginationUl.innerHTML += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <a class="page-link" onclick="changePage(${currentPage + 1})">Siguiente</a></li>`;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(globalData.length / rowsPerPage);
+            if (page >= 1 && page <= totalPages) {
+                currentPage = page;
+                renderTable();
+            }
+        }
+
+        // Evento Botón Generar
+        document.getElementById('btnGenerate').addEventListener('click', generarDatos);
+
+        // Generar 500 iniciales al cargar la página
+        window.onload = generarDatos;
+
+        // ================= FUNCIONES DE EXPORTACIÓN =================
+        function triggerDownload(content, fileName, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function exportarExcel() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            const ws = XLSX.utils.json_to_sheet(globalData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "TechStore_Ventas");
+            XLSX.writeFile(wb, "TechStore_Ventas.xlsx");
+        }
+
+        function exportarCSV() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            const headers = Object.keys(globalData[0]);
+            const csvRows = [];
+            csvRows.push(headers.join(',')); // Cabeceras
+            
+            for (const row of globalData) {
+                const values = headers.map(header => {
+                    const escaped = ('' + row[header]).replace(/"/g, '""'); // Escapar comillas dobles
+                    return `"${escaped}"`;
+                });
+                csvRows.push(values.join(','));
+            }
+            triggerDownload(csvRows.join('\n'), "TechStore_Ventas.csv", "text/csv;charset=utf-8;");
+        }
+
+        function exportarJSON() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            const jsonStr = JSON.stringify(globalData, null, 4);
+            triggerDownload(jsonStr, "TechStore_Ventas.json", "application/json");
+        }
+
+        function exportarXML() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<Ventas>\n';
+            globalData.forEach(row => {
+                xml += '  <Transaccion>\n';
+                for (const key in row) {
+                    xml += `    <${key}>${row[key]}</${key}>\n`;
+                }
+                xml += '  </Transaccion>\n';
+            });
+            xml += '</Ventas>';
+            triggerDownload(xml, "TechStore_Ventas.xml", "application/xml");
+        }
+
+        function exportarTXT() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            const headers = Object.keys(globalData[0]);
+            let txtContent = headers.join('\t') + '\n'; // Separado por tabulación
+            
+            globalData.forEach(row => {
+                const values = headers.map(h => row[h]);
+                txtContent += values.join('\t') + '\n';
+            });
+            triggerDownload(txtContent, "TechStore_Ventas.txt", "text/plain");
+        }
+
+        function exportarPDF() {
+            if (globalData.length === 0) return alert("Genere datos primero.");
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape');
+            
+            doc.text("Reporte de Ventas - TechStore (Generado Automáticamente)", 14, 15);
+            
+            const headers = [['ID', 'FECHA_HORA', 'VENDEDOR', 'CLIENTE', 'PRODUCTO', 'CATEGORÍA', 'CIUDAD', 'CANT', 'PRECIO']];
+            const data = globalData.map(r => [r.ID, r.FECHA_HORA, r.VENDEDOR, r.CLIENTE, r.PRODUCTO, r.CATEGORIA, r.CIUDAD, r.CANTIDAD, r.PRECIO]);
+
+            doc.autoTable({
+                head: headers,
+                body: data,
+                startY: 20,
+                theme: 'striped',
+                headStyles: { fillColor: [31, 31, 31] },
+                styles: { fontSize: 8 }
+            });
+            
+            doc.save("TechStore_Ventas.pdf");
+        }
     </script>
 </body>
 </html>
